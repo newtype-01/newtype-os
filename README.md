@@ -32,10 +32,10 @@ newtype-profile is an AI Agent collaboration framework designed for **content cr
 
 ### Option A: Newtype CLI (Recommended)
 
-[**Newtype CLI**](https://www.npmjs.com/package/newtype-cli) is a standalone terminal AI assistant with newtype-profile built-in. No plugin setup needed — install and go.
+[**Newtype CLI**](https://www.npmjs.com/package/@newtype-os/cli) is a standalone terminal AI assistant with newtype-profile built-in. No plugin setup needed — install and go.
 
 ```bash
-npm install -g newtype-cli
+npm install -g @newtype-os/cli
 newtype
 ```
 
@@ -47,7 +47,7 @@ If you already use OpenCode and want to add newtype-profile as a plugin:
 
 ```bash
 cd ~/.config/opencode
-bun add newtype-profile
+bun add @newtype-os/plugin
 ```
 
 Edit `~/.config/opencode/opencode.json`:
@@ -215,16 +215,16 @@ Use `/memory-consolidate` to manually trigger consolidation.
 
 ## Newtype CLI
 
-[Newtype CLI](https://www.npmjs.com/package/newtype-cli) is a standalone product that bundles newtype-profile into a ready-to-use terminal AI assistant.
+[Newtype CLI](https://www.npmjs.com/package/@newtype-os/cli) is a standalone product that bundles newtype-profile into a ready-to-use terminal AI assistant.
 
 | | newtype-profile (plugin) | Newtype CLI |
 |---|---|---|
-| **Install** | `bun add newtype-profile` in OpenCode | `npm install -g newtype-cli` |
+| **Install** | `bun add @newtype-os/plugin` in OpenCode | `npm install -g @newtype-os/cli` |
 | **Requires** | OpenCode installed separately | Nothing — self-contained |
 | **Launch** | `opencode` | `newtype` |
 | **Config dir** | `~/.config/opencode/` | `~/.config/newtype/` |
 | **Project dir** | `.opencode/` | `.newtype/` |
-| **npm package** | [newtype-profile](https://www.npmjs.com/package/newtype-profile) | [newtype-cli](https://www.npmjs.com/package/newtype-cli) |
+| **npm package** | [@newtype-os/plugin](https://www.npmjs.com/package/@newtype-os/plugin) | [@newtype-os/cli](https://www.npmjs.com/package/@newtype-os/cli) |
 
 Supported platforms: macOS (Apple Silicon & Intel), Linux (x64 & ARM64, glibc & musl), Windows (x64).
 
