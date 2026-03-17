@@ -2,48 +2,53 @@
   <strong>English</strong> | <a href="./README.zh-cn.md">简体中文</a>
 </p>
 
-# newtype-profile
+# newtype OS
 
-**AI Agent Collaboration System for Content Creation**
+**Multi-Agent Content Team — a multi-agent orchestration system built for content production**
 
-Based on [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode), redesigned for content creation scenarios.
+Created by [huangyihe](https://x.com/huangyihe).
 
----
-
-## Created by huangyihe (黄益贺)
-
-- **YouTube**: [https://www.youtube.com/@huanyihe777](https://www.youtube.com/@huanyihe777)
-- **Twitter**: [https://x.com/huangyihe](https://x.com/huangyihe)
-- **Substack**: [https://newtype.pro/](https://newtype.pro/)
-- **知识星球**: [https://t.zsxq.com/19IaNz5wK](https://t.zsxq.com/19IaNz5wK)
+<p>
+  <a href="https://www.npmjs.com/package/@newtype-os/cli"><img src="https://img.shields.io/npm/v/@newtype-os/cli?label=%40newtype-os%2Fcli" /></a>
+  <a href="https://www.npmjs.com/package/@newtype-os/plugin"><img src="https://img.shields.io/npm/v/@newtype-os/plugin?label=%40newtype-os%2Fplugin" /></a>
+</p>
 
 ---
 
-## Overview
+## What is this
 
-newtype-profile is an AI Agent collaboration framework designed for **content creation**:
+At its core, newtype OS is an **8-agent multi-layer orchestration system** equipped with specialized skills and a memory system, purpose-built for content production.
 
-- 📚 Knowledge base management
-- ✍️ Article writing and editing
-- 🔍 Information research and fact-checking
-- 📄 Document extraction and organization
+Think of it as **a content team living in your terminal**. The Chief (Editor-in-Chief) talks to you, breaks down requirements; the Deputy dispatches execution; 6 specialists each handle their domain — research, fact-checking, retrieval, extraction, writing, and editing.
 
-## Two Ways to Use
+```
+You ↔ Chief (Editor-in-Chief)
+          ↓
+      Deputy (Deputy Editor)
+          ↓
+      Researcher · Fact-Checker · Archivist · Extractor · Writer · Editor
+```
 
-### Option A: Newtype CLI (Recommended)
+## Installation & Usage
 
-[**Newtype CLI**](https://www.npmjs.com/package/@newtype-os/cli) is a standalone terminal AI assistant with newtype-profile built-in. No plugin setup needed — install and go.
+newtype OS is designed for both humans and agents.
+
+### For Humans
+
+#### Option 1: newtype CLI (Recommended)
+
+A ready-to-use terminal AI assistant with the full agent team built in.
 
 ```bash
 npm install -g @newtype-os/cli
-newtype
+
+# Launch the TUI
+nt
 ```
 
-Newtype CLI is a white-labeled fork of [OpenCode](https://github.com/anomalyco/opencode) with the full agent team pre-configured.
+#### Option 2: As an OpenCode Plugin
 
-### Option B: As an OpenCode Plugin
-
-If you already use OpenCode and want to add newtype-profile as a plugin:
+If you already use [OpenCode](https://github.com/anomalyco/opencode):
 
 ```bash
 cd ~/.config/opencode
@@ -58,25 +63,116 @@ Edit `~/.config/opencode/opencode.json`:
 }
 ```
 
+### For Agents
+
+After installing newtype CLI, the system ships with a full set of CLI commands (`nt research`, `nt write`, `nt pipeline`, etc.) designed specifically for agent invocation.
+
+Run `nt init` and newtype will automatically detect locally installed AI development tools and inject skill files, teaching agents how to use these CLI commands:
+
+```bash
+npm install -g @newtype-os/cli
+nt init
+```
+
+Supported tools: Claude Code, Cursor, Copilot, Windsurf, Cline, Roo Code, Zed, Goose, Amazon Q, and more.
+
+Once injected, these agents know when and how to call `nt research`, `nt pipeline`, and other commands to augment their own capabilities.
+
 ## Agent Team
 
-| Agent | Role | Description |
-|-------|------|-------------|
-| **chief** | Editor-in-Chief | Dual-mode: exploration partner + task coordinator |
-| **deputy** | Deputy Editor | Executes delegated tasks |
-| **researcher** | Intelligence | Broad search, discover new information |
-| **fact-checker** | Verifier | Validate sources, assess credibility |
-| **archivist** | Librarian | Knowledge base retrieval |
-| **extractor** | Formatter | PDF/image/document extraction |
-| **writer** | Writer | Content production |
-| **editor** | Editor | Content refinement |
+| Agent | Role | Responsibility |
+|-------|------|----------------|
+| **Chief** | Editor-in-Chief | Your entry point — thought partner + task coordinator |
+| **Deputy** | Deputy Editor | Chief's execution layer, dispatches downstream specialists |
+| **Researcher** | Researcher | External intelligence gathering, trend discovery |
+| **Fact-Checker** | Verifier | Fact verification, source credibility assessment |
+| **Archivist** | Archivist | Internal knowledge base retrieval and correlation |
+| **Extractor** | Extractor | PDF/image/web content extraction to Markdown |
+| **Writer** | Writer | Transforms materials into structured first drafts |
+| **Editor** | Editor | Language polish, logic strengthening, style consistency |
 
-## Configure Models
+**You only interact with Chief.** Chief automatically dispatches other agents as needed.
 
-Create a config file to customize which models each agent uses:
+## Built-in Skills
 
-- **Newtype CLI**: `~/.config/newtype/newtype-profile.json`
-- **OpenCode plugin**: `~/.config/opencode/newtype-profile.json`
+Agents auto-load the corresponding skill framework when executing tasks:
+
+| Skill | Command | Description |
+|-------|---------|-------------|
+| **Super Analyst** | `/super-analyst` | 12 analysis frameworks (SWOT, Porter's Five Forces, First Principles, etc.) |
+| **Super Writer** | `/super-writer` | 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.) |
+| **Super Fact-Checker** | `/super-fact-checker` | Systematic fact-checking + source credibility assessment |
+| **Super Editor** | `/super-editor` | 4-layer editing: structure → paragraph → sentence → word |
+| **Super Interviewer** | `/super-interviewer` | Deep dialogue techniques for requirement mining and brainstorming |
+
+Chief auto-loads the relevant skill when a task calls for a structured framework. You can also trigger them manually via slash commands.
+
+## CLI Commands
+
+Beyond the TUI, newtype provides a set of specialized commands for CLI and agent invocation (all support `--json` output):
+
+| Command | Agent(s) | Description |
+|---------|----------|-------------|
+| `nt research [topic]` | Researcher + Fact-Checker | Deep research + source verification |
+| `nt write [topic]` | Writer | Multi-style content generation |
+| `nt edit [file]` | Editor | 4-layer content refinement |
+| `nt fact-check [topic]` | Fact-Checker | Fact-checking and cross-verification |
+| `nt analyze [topic]` | Chief + Researcher | Framework-based structured analysis |
+| `nt extract` | Extractor | Extract content from files/URLs/images |
+| `nt archive <action>` | Archivist | Knowledge base CRUD and semantic search |
+| `nt pipeline [topic]` | Full orchestration | Research → Analyze → Write → Fact-check → Edit |
+
+Examples:
+
+```bash
+# Research a topic and output a report
+nt research "AI Agent architecture trends 2026" -o research.md
+
+# Write an article based on research
+nt write --input research.md --style newsletter -o draft.md
+
+# Full pipeline in one command
+nt pipeline "The future of MCP" --style essay --output-dir ./output/
+```
+
+## Memory System
+
+newtype has a built-in automatic memory system — no manual management needed:
+
+- **Daily summaries**: Auto-generated LLM summaries after session idle, stored in `.newtype/memory/YYYY-MM-DD.md`
+- **Full transcripts**: Complete conversation history per session in `.newtype/memory/full/`
+- **Long-term memory**: Old logs auto-archived to `.newtype/MEMORY.md` every 7 days
+- **Auto-recall**: Relevant memories are automatically retrieved and injected into context during conversations
+
+Use `/memory-consolidate` to manually trigger archival.
+
+## Knowledge Base
+
+newtype provides two knowledge base initialization commands to help agents quickly understand your project:
+
+| Command | Generated File | Description |
+|---------|---------------|-------------|
+| `/init` | `AGENTS.md` | Project-level instruction file defining agent behavior and context for the current project |
+| `/init-deep` | `KNOWLEDGE.md` | Deep knowledge index that auto-scans project structure and generates a detailed codebase map |
+
+## Configuration
+
+### Connect Model Providers
+
+Use the `/connect` command in the TUI to connect model providers (75+ supported), or via CLI:
+
+```bash
+nt auth login
+```
+
+### Configure Agent Models
+
+**Option 1**: Use the `/agent-models` command in the TUI to configure models for each agent through the interface.
+
+**Option 2**: Edit the config file directly.
+
+- newtype CLI: `~/.config/newtype/newtype-profile.json`
+- OpenCode plugin: `~/.config/opencode/newtype-profile.json`
 
 ```json
 {
@@ -89,102 +185,24 @@ Create a config file to customize which models each agent uses:
 }
 ```
 
-All 8 agents (`chief`, `deputy`, `researcher`, `fact-checker`, `archivist`, `extractor`, `writer`, `editor`) can be configured independently.
-
-<details>
-<summary>Optional: Google Antigravity OAuth</summary>
-
-If using Google Antigravity as your model provider, add `google_auth`:
-
-```json
-{
-  "google_auth": true,
-  "agents": {
-    "chief": { "model": "google/antigravity-claude-opus-4-5-thinking-high" }
-  }
-}
-```
-
-Then authenticate:
-
-```bash
-opencode auth login
-# Select Provider: Google
-# Select Login method: OAuth with Google (Antigravity)
-```
-
-</details>
-
-## Usage
-
-### Three-Layer Architecture
-
-```
-User ↔ Chief (Editor-in-Chief)
-           ↓ chief_task
-       Deputy (Deputy Editor)
-           ↓ chief_task
-       Specialist Agents (researcher, writer, editor...)
-```
-
-**You only interact with Chief**:
-
-- **Mode 1 - Thought Partner**: Chief thinks WITH you, challenges flawed logic
-- **Mode 2 - Execution Coordinator**: Chief decomposes, delegates, and delivers
-
-### Example Conversations
-
-```
-"Help me understand the AI development trends in 2024"
-"Write an article about this topic based on our research"
-"Verify the sources in this document"
-```
-
-## Customization
-
-### SOUL.md - Customize Chief's Personality (v1.0.60+)
-
-Chief's personality has three layers:
-- **Capabilities** (hardcoded): What Chief can do
-- **Inner Persona** (hardcoded): Core values and thinking patterns
-- **Outer Persona** (customizable): Communication style
-
-Create `.opencode/SOUL.md` (or `.newtype/SOUL.md` for Newtype CLI) to customize how Chief communicates:
-
-```bash
-/init-soul  # Creates default SOUL.md template
-```
-
-Example customizations:
-- Make Chief more formal or casual
-- Adjust language preferences
-- Change how direct Chief is
-
-Changes take effect after restarting.
-
-### Built-in Skills
-
-| Skill | Command | Description |
-|-------|---------|-------------|
-| **super-analyst** | `/super-analyst` | 12 analysis frameworks + research methodology |
-| **super-writer** | `/super-writer` | 6 writing methodologies (W.R.I.T.E, AIDA, etc.) |
-| **super-fact-checker** | `/super-fact-checker` | Claim verification with source credibility |
-| **super-editor** | `/super-editor` | 4-layer editing: structure → paragraph → sentence → word |
-| **super-interviewer** | `/super-interviewer` | Dialogue techniques for exploration |
-| **playwright** | `/playwright` | Browser automation |
-
-Chief auto-loads skills when tasks need structured frameworks.
+All 8 agents can be configured with independent models and parameters.
 
 ### MCP Servers
 
-Built-in MCPs:
-
 | MCP | Default | Config |
 |-----|---------|--------|
-| **websearch** (Exa) | Enabled | None |
-| **sequential-thinking** | Enabled | None |
-| **tavily** | Disabled | `api_key` |
-| **firecrawl** | Disabled | `api_key` |
+| **websearch** (Exa) | Enabled | None required |
+| **sequential-thinking** | Enabled | None required |
+| **tavily** | Disabled | Requires `api_key` |
+| **firecrawl** | Disabled | Requires `api_key` |
+
+### Customize Chief's Personality
+
+Create `.newtype/SOUL.md` (or `.opencode/SOUL.md` for the OpenCode plugin) to customize Chief's communication style:
+
+```bash
+/init-soul  # Generate default template
+```
 
 ### Disable Features
 
@@ -197,36 +215,24 @@ Built-in MCPs:
 }
 ```
 
-## Memory System
+## Comparison
 
-Auto-saves conversation summaries to `.opencode/memory/` (or `.newtype/memory/`):
-- Daily summaries (LLM-generated)
-- Full transcripts per session
-- Auto-archive to `MEMORY.md` after 7 days
-
-Use `/memory-consolidate` to manually trigger consolidation.
-
-## Other Features
-
-- **Background Tasks**: Run multiple agents in parallel
-- **Session Recovery**: Auto-recover from errors
-- **Startup Config Checker**: Guides model setup on first run
-- **Plugin Switching**: `/switch newtype` / `/switch omo` / `/switch none`
-
-## Newtype CLI
-
-[Newtype CLI](https://www.npmjs.com/package/@newtype-os/cli) is a standalone product that bundles newtype-profile into a ready-to-use terminal AI assistant.
-
-| | newtype-profile (plugin) | Newtype CLI |
+| | @newtype-os/plugin | @newtype-os/cli |
 |---|---|---|
-| **Install** | `bun add @newtype-os/plugin` in OpenCode | `npm install -g @newtype-os/cli` |
-| **Requires** | OpenCode installed separately | Nothing — self-contained |
-| **Launch** | `opencode` | `newtype` |
+| **Nature** | OpenCode plugin, open source | Standalone terminal app, closed source |
+| **Install** | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
+| **Requires** | OpenCode | Self-contained, no dependencies |
+| **Launch** | `opencode` | `nt` |
 | **Config dir** | `~/.config/opencode/` | `~/.config/newtype/` |
 | **Project dir** | `.opencode/` | `.newtype/` |
-| **npm package** | [@newtype-os/plugin](https://www.npmjs.com/package/@newtype-os/plugin) | [@newtype-os/cli](https://www.npmjs.com/package/@newtype-os/cli) |
 
-Supported platforms: macOS (Apple Silicon & Intel), Linux (x64 & ARM64, glibc & musl), Windows (x64).
+Supported platforms: macOS (Apple Silicon / Intel), Linux (x64 / ARM64), Windows (x64).
+
+## Links
+
+- **YouTube**: [youtube.com/@huanyihe777](https://www.youtube.com/@huanyihe777)
+- **Twitter**: [x.com/huangyihe](https://x.com/huangyihe)
+- **Substack**: [newtype.pro](https://newtype.pro/)
 
 ## License
 
