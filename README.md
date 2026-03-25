@@ -135,6 +135,26 @@ nt write --input research.md --style newsletter -o draft.md
 nt pipeline "The future of MCP" --style essay --output-dir ./output/
 ```
 
+## WeChat Integration
+
+newtype CLI has built-in [WeClaw](https://github.com/fastclaw-ai/weclaw) integration, bridging your WeChat with the full agent team via the [ACP (Agent Client Protocol)](https://github.com/nicepkg/acp). Send a message to your WeChat account, and Chief will handle it — research, write, fact-check, all from WeChat.
+
+| Command | Description |
+|---------|-------------|
+| `nt wechat setup` | Download WeClaw binary + scan QR code to link WeChat |
+| `nt wechat start` | Start the WeChat agent bridge (auto-updates before launch) |
+| `nt wechat stop` | Stop the WeChat agent bridge |
+| `nt wechat status` | Show installed version and running state |
+
+Quick start:
+
+```bash
+nt wechat setup    # One-time: download + QR login
+nt wechat start    # Start the bridge daemon
+```
+
+The agent bridge runs in the background. WeChat messages are routed to newtype's ACP server, which dispatches them to Chief using your configured model. No API key needed for WeChat — it uses the official [iLink API](https://ilinkai.weixin.qq.com).
+
 ## Memory System
 
 newtype has a built-in automatic memory system — no manual management needed:
