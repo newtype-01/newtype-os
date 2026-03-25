@@ -61,7 +61,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [test, typecheck]
-    if: github.repository == 'code-yeongyu/oh-my-opencode'
+    if: github.repository == 'newtype-01/newtype-profile'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,7 +111,7 @@ jobs:
           tsc --emitDeclarationOnly
           echo "=== Running build:schema ==="
           bun run build:schema
-      
+
       - name: Verify build output
         run: |
           echo "=== dist/ contents ==="

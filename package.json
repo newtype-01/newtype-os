@@ -1,5 +1,5 @@
 {
-  "name": "newtype-profile",
+  "name": "@newtype-os/plugin",
   "version": "1.0.66",
   "description": "AI Agent Collaboration System for Content Creation - Based on oh-my-opencode",
   "main": "dist/index.js",

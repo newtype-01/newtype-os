@@ -1,8 +1,9 @@
-import type { BuiltinSkill } from "./types"
+import type { BuiltinSkill } from "./types";
 
 const playwrightSkill: BuiltinSkill = {
   name: "playwright",
-  description: "MUST USE for any browser-related tasks. Browser automation via Playwright MCP - verification, browsing, information gathering, web scraping, testing, screenshots, and all browser interactions.",
+  description:
+    "MUST USE for any browser-related tasks. Browser automation via Playwright MCP - verification, browsing, information gathering, web scraping, testing, screenshots, and all browser interactions.",
   template: `# Playwright Browser Automation
 
 This skill provides browser automation capabilities via the Playwright MCP server.`,
@@ -12,11 +13,12 @@ This skill provides browser automation capabilities via the Playwright MCP serve
       args: ["@playwright/mcp@latest"],
     },
   },
-}
+};
 
 const superAnalystSkill: BuiltinSkill = {
   name: "super-analyst",
-  description: "Professional analysis and research assistant with 12 frameworks (SWOT, Porter's Five Forces, First Principles, etc.) plus systematic research methodology. Auto-detects complexity: simple questions get direct answers, complex ones get structured multi-framework analysis with rigorous research.",
+  description:
+    "Professional analysis and research assistant with 12 frameworks (SWOT, Porter's Five Forces, First Principles, etc.) plus systematic research methodology. Auto-detects complexity: simple questions get direct answers, complex ones get structured multi-framework analysis with rigorous research.",
   template: `# Super Analyst
 
 > 判断复杂度 → 系统化调研 → 选框架分析 → 输出结论
@@ -338,11 +340,12 @@ skill_mcp(mcp_name="sequential-thinking", tool_name="sequentialthinking")
 - 大多数中等复杂度问题
 - 框架选择明显的情况
 `,
-}
+};
 
 const frontendUiUxSkill: BuiltinSkill = {
   name: "frontend-ui-ux",
-  description: "Designer-turned-developer who crafts stunning UI/UX even without design mockups",
+  description:
+    "Designer-turned-developer who crafts stunning UI/UX even without design mockups",
   template: `# Role: Designer-Turned-Developer
 
 You are a designer who learned to code. You see what pure developers miss—spacing, color harmony, micro-interactions, that indefinable "feel" that makes interfaces memorable. Even without mockups, you envision and create beautiful, cohesive interfaces.
@@ -416,7 +419,7 @@ Match implementation complexity to aesthetic vision:
 - **Minimalist** → Restraint, precision, careful spacing and typography
 
 Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. You are capable of extraordinary creative work—don't hold back.`,
-}
+};
 
 const gitMasterSkill: BuiltinSkill = {
   name: "git-master",
@@ -1549,11 +1552,12 @@ POTENTIAL ACTIONS:
 - \`-S\` when \`-G\` is appropriate -> Wrong results
 - Blame without \`-C\` on moved code -> Wrong attribution
 - Bisect without proper good/bad boundaries -> Wasted time`,
-}
+};
 
 const superWriterSkill: BuiltinSkill = {
   name: "super-writer",
-  description: "Professional content creation assistant with 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.). Use for articles, copy, stories, social posts, emails, marketing content. Triggers: 'write', 'create content', 'draft', 'blog post', 'marketing copy'.",
+  description:
+    "Professional content creation assistant with 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.). Use for articles, copy, stories, social posts, emails, marketing content. Triggers: 'write', 'create content', 'draft', 'blog post', 'marketing copy'.",
   template: `# Super Writer
 
 > 理解需求 → 按需准备 → 选方法创作
@@ -1739,11 +1743,12 @@ const superWriterSkill: BuiltinSkill = {
 | 大改（方向/风格调整） | 确认新方向，重写相关部分 |
 | 全部重来 | 确认新需求，重新开始 |
 `,
-}
+};
 
 const superFactCheckerSkill: BuiltinSkill = {
   name: "super-fact-checker",
-  description: "Systematic fact-checking methodology for verifying claims, assessing source credibility, and ensuring content accuracy. Use when reviewing content for factual accuracy, validating sources, or building trust through verification.",
+  description:
+    "Systematic fact-checking methodology for verifying claims, assessing source credibility, and ensuring content accuracy. Use when reviewing content for factual accuracy, validating sources, or building trust through verification.",
   template: `# Super Fact-Checker
 
 > 识别声明 → 评估优先级 → 核查验证 → 标注结果
@@ -1900,11 +1905,12 @@ const superFactCheckerSkill: BuiltinSkill = {
 - ✅ 说明核查过程
 - ✅ 区分"事实错误"和"表述不精确"
 `,
-}
+};
 
 const superEditorSkill: BuiltinSkill = {
   name: "super-editor",
-  description: "Systematic editing methodology for refining existing content. Covers structural editing, paragraph flow, sentence clarity, and word choice. Use when polishing drafts, improving readability, or ensuring consistency.",
+  description:
+    "Systematic editing methodology for refining existing content. Covers structural editing, paragraph flow, sentence clarity, and word choice. Use when polishing drafts, improving readability, or ensuring consistency.",
   template: `# Super Editor
 
 > 判断层级 → 从大到小编辑 → 标注修改 → 解释理由
@@ -2074,11 +2080,12 @@ const superEditorSkill: BuiltinSkill = {
 - ✅ 每处修改都有理由
 - ✅ 保留原文供对比
 `,
-}
+};
 
 const superInterviewerSkill: BuiltinSkill = {
   name: "super-interviewer",
-  description: "Systematic questioning and dialogue techniques for exploring ideas, uncovering needs, and challenging assumptions. Use for brainstorming sessions, requirement gathering, or deep exploration of complex topics.",
+  description:
+    "Systematic questioning and dialogue techniques for exploring ideas, uncovering needs, and challenging assumptions. Use for brainstorming sessions, requirement gathering, or deep exploration of complex topics.",
   template: `# Super Interviewer
 
 > 建立信任 → 开放探索 → 深度挖掘 → 总结确认
@@ -2262,7 +2269,202 @@ const superInterviewerSkill: BuiltinSkill = {
 - ✅ 等对方说完再追问
 - ✅ 总结确认理解
 `,
-}
+};
+
+const superObsidianSkill: BuiltinSkill = {
+  name: "super-obsidian",
+  description:
+    "MUST USE when working in an Obsidian vault (.obsidian/ directory detected). Complete Obsidian CLI command reference for searching, reading, creating, and managing notes. Obsidian's native search engine is far superior to grep/rg file traversal. Triggers: 'Obsidian vault', 'obsidian search', 'note search', environment shows 'Is Obsidian vault: yes'.",
+  template: `# Super Obsidian — CLI-First Knowledge Base Operations
+
+> 检测环境 → 用 Obsidian CLI 搜索/读写 → 永远不直接遍历 .md 文件
+
+---
+
+## 前提条件
+
+1. **Obsidian App 必须正在运行**（CLI 是 App 的遥控器，不是独立工具）
+2. CLI 已在 Settings → General → Command line interface 中启用
+3. \`obsidian\` 命令在 PATH 中可用
+
+**验证**：
+\`\`\`bash
+obsidian version
+\`\`\`
+
+如果命令不存在，提示用户：
+- macOS: 在 Obsidian 设置中启用 CLI，会自动添加到 PATH
+- 手动添加: 将 Obsidian 可执行文件路径加入 PATH
+
+---
+
+## 核心原则
+
+1. **搜索必用 CLI**：\`obsidian search\` 使用 Obsidian 原生搜索引擎，效果远优于 grep/rg 遍历 .md 文件
+2. **走正门**：通过 CLI 操作保证索引一致性，避免直接读写文件系统导致索引错乱
+3. **引号规则**：参数有空格必须双引号，换行用 \`\\n\`
+4. **file 参数**：通常不需要 \`.md\` 后缀，Obsidian 自动解析；路径相对于 vault 根目录
+
+---
+
+## 命令速查
+
+### 🔍 搜索（最重要 — 替代 grep/rg）
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| \`obsidian search query="关键词"\` | 全文搜索 | \`obsidian search query="项目规划" --copy\` |
+| \`obsidian search:context query="关键词" limit=N\` | 带上下文的全文搜索 | \`obsidian search:context query="瓶颈" limit=10\` |
+| \`obsidian backlinks file="笔记名"\` | 查反向链接（谁引用了这篇） | \`obsidian backlinks file="项目A"\` |
+| \`obsidian links file="笔记名"\` | 查外链（这篇引用了谁） | \`obsidian links file="项目A"\` |
+| \`obsidian orphans\` | 查找孤立笔记（无链接） | |
+| \`obsidian tags\` | 列出所有标签 | |
+| \`obsidian tasks\` | 显示所有任务 | |
+| \`obsidian random\` | 随机打开一篇笔记 | |
+
+### 📖 读取
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| \`obsidian read file="笔记名"\` | 读取笔记内容 | \`obsidian read file="年度计划" --copy\` |
+| \`obsidian daily:read\` | 读取今日日记 | |
+| \`obsidian outline file="笔记名"\` | 获取笔记大纲 | |
+| \`obsidian wordcount\` | 字数统计 | |
+| \`obsidian bookmarks\` | 书签列表 | |
+
+### ✏️ 写入 / 创建
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| \`obsidian create name="标题" content="内容"\` | 创建新笔记 | \`obsidian create name="会议记录" content="# 会议\\n- 议题1" open\` |
+| \`obsidian append path="文件.md" content="文字"\` | 追加到指定笔记 | \`obsidian append path="项目日志.md" content="\\n## 进展\\n..."\` |
+| \`obsidian prepend path="文件.md" content="文字"\` | 前插到指定笔记 | |
+| \`obsidian daily:append content="文字"\` | 追加到今日日记 | \`obsidian daily:append content="- [ ] 买牛奶"\` |
+| \`obsidian daily:prepend content="文字"\` | 前插到今日日记 | |
+
+### 📅 日记（Daily Notes）
+
+| 命令 | 用途 |
+|------|------|
+| \`obsidian daily\` | 打开今日笔记 |
+| \`obsidian daily:path\` | 显示今日笔记路径 |
+| \`obsidian daily:read\` | 读取今日笔记内容 |
+| \`obsidian daily:append content="..."\` | 追加到今日笔记 |
+| \`obsidian daily:prepend content="..."\` | 前插到今日笔记 |
+
+### 📝 属性 / 标签 / 任务
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| \`obsidian property:set file="笔记" name="键" value="值"\` | 设置 YAML 属性 | \`obsidian property:set file="项目A" name="status" value="done"\` |
+| \`obsidian tags\` | 列出所有标签 | |
+| \`obsidian task ref="文件:行号" toggle\` | 切换任务完成状态 | |
+
+### 📂 文件管理
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| \`obsidian open file="笔记名"\` | 打开笔记 | |
+| \`obsidian move file="旧名" to="新路径"\` | 移动/重命名 | |
+| \`obsidian rename file="旧名" name="新名"\` | 重命名 | |
+| \`obsidian delete file="笔记名"\` | 删除（加 \`permanent\` 永久删除） | |
+
+### 🗄️ Vault / 插件 / 工作区
+
+| 命令 | 用途 |
+|------|------|
+| \`obsidian vaults\` | 列出所有 vault |
+| \`obsidian vault:open name="vault名"\` | 切换 vault |
+| \`obsidian plugins\` | 列出插件 |
+| \`obsidian plugin:enable id="插件ID"\` | 启用插件 |
+| \`obsidian workspace:save name="工作区名"\` | 保存工作区 |
+| \`obsidian workspace:load name="工作区名"\` | 加载工作区 |
+
+### 🛠️ 开发者 / 高级
+
+| 命令 | 用途 |
+|------|------|
+| \`obsidian eval code="JS代码"\` | 执行 Obsidian 内部 JS API |
+| \`obsidian devtools\` | 打开开发者工具 |
+| \`obsidian dev:screenshot\` | 截图 |
+| \`obsidian help\` | 查看全部命令 |
+| \`obsidian help <命令>\` | 查看具体命令帮助 |
+| \`obsidian reload\` | 重载窗口 |
+
+---
+
+## 典型工作流
+
+### 搜索 → 阅读 → 总结追加
+
+\`\`\`bash
+# 1. 搜索相关笔记
+obsidian search query="项目规划"
+
+# 2. 读取最相关的笔记
+obsidian read file="2026年项目规划"
+
+# 3. 追加 AI 总结
+obsidian append path="2026年项目规划.md" content="\\n---\\n## AI 总结\\n要点1...\\n要点2..."
+\`\`\`
+
+### 日记工作流
+
+\`\`\`bash
+# 查看今日日记
+obsidian daily:read
+
+# 追加记录
+obsidian daily:append content="\\n## 工作记录\\n- 完成了 X 功能\\n- 发现了 Y 问题"
+
+# 追加待办
+obsidian daily:append content="\\n- [ ] 明天跟进 Z"
+\`\`\`
+
+### 知识图谱探索
+
+\`\`\`bash
+# 查看某个笔记被谁引用
+obsidian backlinks file="核心概念A"
+
+# 查看某个笔记引用了什么
+obsidian links file="核心概念A"
+
+# 找到孤立笔记（可能需要整理）
+obsidian orphans
+\`\`\`
+
+### 批量属性管理
+
+\`\`\`bash
+# 标记笔记状态
+obsidian property:set file="项目A" name="status" value="completed"
+obsidian property:set file="项目B" name="priority" value="high"
+\`\`\`
+
+---
+
+## ⚠️ 注意事项
+
+1. **Obsidian 必须运行**：所有 CLI 命令都通过 App 执行，App 关闭则全部失败
+2. **不要直接修改 .md 文件**：会导致 Obsidian 索引错乱，用 CLI 的 append/prepend/create
+3. **搜索结果格式**：CLI 返回纯文本，可以直接解析
+4. **content 中的换行**：使用 \`\\n\`，不要使用实际换行符
+5. **--copy 标志**：将结果复制到系统剪贴板，适合快速传递
+6. **open / newtab 标志**：在 Obsidian UI 中打开笔记（create、open 等命令可用）
+
+---
+
+## 何时回退到文件系统操作
+
+仅在以下情况直接操作文件：
+- Obsidian App 未运行且无法启动
+- 需要批量处理超出 CLI 能力的操作（如正则替换所有文件）
+- 处理 .obsidian/ 配置文件本身
+
+其他所有情况，**一律使用 Obsidian CLI**。
+`,
+};
 
 export function createBuiltinSkills(): BuiltinSkill[] {
   return [
@@ -2272,5 +2474,6 @@ export function createBuiltinSkills(): BuiltinSkill[] {
     superFactCheckerSkill,
     superEditorSkill,
     superInterviewerSkill,
-  ]
+    superObsidianSkill,
+  ];
 }
