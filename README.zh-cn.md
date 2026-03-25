@@ -135,6 +135,26 @@ nt write --input research.md --style newsletter -o draft.md
 nt pipeline "MCP 协议的未来" --style essay --output-dir ./output/
 ```
 
+## 微信集成
+
+newtype CLI 内置了 [WeClaw](https://github.com/fastclaw-ai/weclaw) 集成，通过 [ACP（Agent Client Protocol）](https://github.com/nicepkg/acp) 将你的微信与完整 Agent 团队打通。在微信里给自己发一条消息，Chief 就会接手处理——调研、写作、核查，全部在微信完成。
+
+| 命令 | 说明 |
+|------|------|
+| `nt wechat setup` | 下载 WeClaw 二进制文件 + 扫码绑定微信 |
+| `nt wechat start` | 启动微信 Agent 桥接（启动前自动检测更新） |
+| `nt wechat stop` | 停止微信 Agent 桥接 |
+| `nt wechat status` | 查看已安装版本和运行状态 |
+
+快速开始：
+
+```bash
+nt wechat setup    # 首次：下载 + 扫码登录
+nt wechat start    # 启动桥接守护进程
+```
+
+桥接进程在后台运行。微信消息通过 newtype 的 ACP 服务器路由，使用你配置的模型调度 Chief 处理。微信端无需 API Key——使用的是微信官方 [iLink API](https://ilinkai.weixin.qq.com)。
+
 ## 记忆系统
 
 newtype 内置自动记忆系统，无需手动管理：
