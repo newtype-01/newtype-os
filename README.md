@@ -80,16 +80,16 @@ Once injected, these agents know when and how to call `nt research`, `nt pipelin
 
 ## Agent Team
 
-| Agent | Role | Responsibility |
-|-------|------|----------------|
-| **Chief** | Editor-in-Chief | Your entry point — thought partner + task coordinator |
-| **Deputy** | Deputy Editor | Chief's execution layer, dispatches downstream specialists |
-| **Researcher** | Researcher | External intelligence gathering, trend discovery |
-| **Fact-Checker** | Verifier | Fact verification, source credibility assessment |
-| **Archivist** | Archivist | Internal knowledge base retrieval and correlation |
-| **Extractor** | Extractor | PDF/image/web content extraction to Markdown |
-| **Writer** | Writer | Transforms materials into structured first drafts |
-| **Editor** | Editor | Language polish, logic strengthening, style consistency |
+| Agent            | Role            | Responsibility                                             |
+| ---------------- | --------------- | ---------------------------------------------------------- |
+| **Chief**        | Editor-in-Chief | Your entry point — thought partner + task coordinator      |
+| **Deputy**       | Deputy Editor   | Chief's execution layer, dispatches downstream specialists |
+| **Researcher**   | Researcher      | External intelligence gathering, trend discovery           |
+| **Fact-Checker** | Verifier        | Fact verification, source credibility assessment           |
+| **Archivist**    | Archivist       | Internal knowledge base retrieval and correlation          |
+| **Extractor**    | Extractor       | PDF/image/web content extraction to Markdown               |
+| **Writer**       | Writer          | Transforms materials into structured first drafts          |
+| **Editor**       | Editor          | Language polish, logic strengthening, style consistency    |
 
 **You only interact with Chief.** Chief automatically dispatches other agents as needed.
 
@@ -97,30 +97,31 @@ Once injected, these agents know when and how to call `nt research`, `nt pipelin
 
 Agents auto-load the corresponding skill framework when executing tasks:
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| **Super Analyst** | `/super-analyst` | 12 analysis frameworks (SWOT, Porter's Five Forces, First Principles, etc.) |
-| **Super Writer** | `/super-writer` | 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.) |
-| **Super Fact-Checker** | `/super-fact-checker` | Systematic fact-checking + source credibility assessment |
-| **Super Editor** | `/super-editor` | 4-layer editing: structure → paragraph → sentence → word |
-| **Super Interviewer** | `/super-interviewer` | Deep dialogue techniques for requirement mining and brainstorming |
+| Skill                  | Command               | Description                                                                 |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------- |
+| **Super Analyst**      | `/super-analyst`      | 12 analysis frameworks (SWOT, Porter's Five Forces, First Principles, etc.) |
+| **Super Writer**       | `/super-writer`       | 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.)               |
+| **Super Fact-Checker** | `/super-fact-checker` | Systematic fact-checking + source credibility assessment                    |
+| **Super Editor**       | `/super-editor`       | 4-layer editing: structure → paragraph → sentence → word                    |
+| **Super Interviewer**  | `/super-interviewer`  | Deep dialogue techniques for requirement mining and brainstorming           |
+| **Super Obsidian**     | `/super-obsidian`     | Obsidian CLI-first vault operations: search, read, create, and manage notes |
 
-Chief auto-loads the relevant skill when a task calls for a structured framework. You can also trigger them manually via slash commands.
+Chief auto-loads the relevant skill when a task calls for a structured framework. You can also trigger them manually via slash commands. Super Obsidian is auto-loaded when an Obsidian vault (`.obsidian/` directory) is detected.
 
 ## CLI Commands
 
 Beyond the TUI, newtype provides a set of specialized commands for CLI and agent invocation (all support `--json` output):
 
-| Command | Agent(s) | Description |
-|---------|----------|-------------|
-| `nt research [topic]` | Researcher + Fact-Checker | Deep research + source verification |
-| `nt write [topic]` | Writer | Multi-style content generation |
-| `nt edit [file]` | Editor | 4-layer content refinement |
-| `nt fact-check [topic]` | Fact-Checker | Fact-checking and cross-verification |
-| `nt analyze [topic]` | Chief + Researcher | Framework-based structured analysis |
-| `nt extract` | Extractor | Extract content from files/URLs/images |
-| `nt archive <action>` | Archivist | Knowledge base CRUD and semantic search |
-| `nt pipeline [topic]` | Full orchestration | Research → Analyze → Write → Fact-check → Edit |
+| Command                 | Agent(s)                  | Description                                    |
+| ----------------------- | ------------------------- | ---------------------------------------------- |
+| `nt research [topic]`   | Researcher + Fact-Checker | Deep research + source verification            |
+| `nt write [topic]`      | Writer                    | Multi-style content generation                 |
+| `nt edit [file]`        | Editor                    | 4-layer content refinement                     |
+| `nt fact-check [topic]` | Fact-Checker              | Fact-checking and cross-verification           |
+| `nt analyze [topic]`    | Chief + Researcher        | Framework-based structured analysis            |
+| `nt extract`            | Extractor                 | Extract content from files/URLs/images         |
+| `nt archive <action>`   | Archivist                 | Knowledge base CRUD and semantic search        |
+| `nt pipeline [topic]`   | Full orchestration        | Research → Analyze → Write → Fact-check → Edit |
 
 Examples:
 
@@ -139,12 +140,12 @@ nt pipeline "The future of MCP" --style essay --output-dir ./output/
 
 newtype CLI has built-in [WeClaw](https://github.com/fastclaw-ai/weclaw) integration, bridging your WeChat with the full agent team via the [ACP (Agent Client Protocol)](https://github.com/nicepkg/acp). Send a message to your WeChat account, and Chief will handle it — research, write, fact-check, all from WeChat.
 
-| Command | Description |
-|---------|-------------|
-| `nt wechat setup` | Download WeClaw binary + scan QR code to link WeChat |
-| `nt wechat start` | Start the WeChat agent bridge (auto-updates before launch) |
-| `nt wechat stop` | Stop the WeChat agent bridge |
-| `nt wechat status` | Show installed version and running state |
+| Command            | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
+| `nt wechat setup`  | Download WeClaw binary + scan QR code to link WeChat       |
+| `nt wechat start`  | Start the WeChat agent bridge (auto-updates before launch) |
+| `nt wechat stop`   | Stop the WeChat agent bridge                               |
+| `nt wechat status` | Show installed version and running state                   |
 
 Quick start:
 
@@ -170,9 +171,9 @@ Use `/memory-consolidate` to manually trigger archival.
 
 newtype provides two knowledge base initialization commands to help agents quickly understand your project:
 
-| Command | Generated File | Description |
-|---------|---------------|-------------|
-| `/init` | `AGENTS.md` | Project-level instruction file defining agent behavior and context for the current project |
+| Command      | Generated File | Description                                                                                  |
+| ------------ | -------------- | -------------------------------------------------------------------------------------------- |
+| `/init`      | `AGENTS.md`    | Project-level instruction file defining agent behavior and context for the current project   |
 | `/init-deep` | `KNOWLEDGE.md` | Deep knowledge index that auto-scans project structure and generates a detailed codebase map |
 
 ## Configuration
@@ -209,12 +210,12 @@ All 8 agents can be configured with independent models and parameters.
 
 ### MCP Servers
 
-| MCP | Default | Config |
-|-----|---------|--------|
-| **websearch** (Exa) | Enabled | None required |
-| **sequential-thinking** | Enabled | None required |
-| **tavily** | Disabled | Requires `api_key` |
-| **firecrawl** | Disabled | Requires `api_key` |
+| MCP                     | Default  | Config             |
+| ----------------------- | -------- | ------------------ |
+| **websearch** (Exa)     | Enabled  | None required      |
+| **sequential-thinking** | Enabled  | None required      |
+| **tavily**              | Disabled | Requires `api_key` |
+| **firecrawl**           | Disabled | Requires `api_key` |
 
 ### Customize Chief's Personality
 
@@ -237,14 +238,14 @@ Create `.newtype/SOUL.md` (or `.opencode/SOUL.md` for the OpenCode plugin) to cu
 
 ## Comparison
 
-| | @newtype-os/plugin | @newtype-os/cli |
-|---|---|---|
-| **Nature** | OpenCode plugin, open source | Standalone terminal app, closed source |
-| **Install** | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
-| **Requires** | OpenCode | Self-contained, no dependencies |
-| **Launch** | `opencode` | `nt` |
-| **Config dir** | `~/.config/opencode/` | `~/.config/newtype/` |
-| **Project dir** | `.opencode/` | `.newtype/` |
+|                 | @newtype-os/plugin           | @newtype-os/cli                        |
+| --------------- | ---------------------------- | -------------------------------------- |
+| **Nature**      | OpenCode plugin, open source | Standalone terminal app, closed source |
+| **Install**     | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli`       |
+| **Requires**    | OpenCode                     | Self-contained, no dependencies        |
+| **Launch**      | `opencode`                   | `nt`                                   |
+| **Config dir**  | `~/.config/opencode/`        | `~/.config/newtype/`                   |
+| **Project dir** | `.opencode/`                 | `.newtype/`                            |
 
 Supported platforms: macOS (Apple Silicon / Intel), Linux (x64 / ARM64), Windows (x64).
 
