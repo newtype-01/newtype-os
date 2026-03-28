@@ -29,6 +29,29 @@ newtype OS 的内核是一套 **8 Agent 多层编排系统**，配备专业 Skil
      Researcher · Fact-Checker · Archivist · Extractor · Writer · Editor
 ```
 
+## 对比
+
+|              | @newtype-os/plugin（插件）   | @newtype-os/cli（CLI）           |
+| ------------ | ---------------------------- | -------------------------------- |
+| **性质**     | OpenCode 插件                | 独立终端应用                     |
+| **安装**     | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
+| **依赖**     | 需要 OpenCode                | 自包含，无需其他依赖             |
+| **启动**     | `opencode`                   | `nt`                             |
+| **配置目录** | `~/.config/opencode/`        | `~/.config/newtype/`             |
+| **项目目录** | `.opencode/`                 | `.newtype/`                      |
+
+### 核心差异
+
+`@newtype-os/cli` 不是"OpenCode 加了个插件"。它将 OpenCode 作为底层引擎整合进来，以独立产品的形态发布。安装后运行 `nt`，完整的 8 Agent 团队开箱即用。而 `@newtype-os/plugin` 是标准的 OpenCode 插件，将同样的 Agent 团队注入到你现有的 OpenCode 环境中。
+
+CLI 使用独立的配置命名空间：全局配置位于 `~/.config/newtype/`，项目级文件位于 `.newtype/`。这和 OpenCode 的 `~/.config/opencode/` 与 `.opencode/` 完全隔离。安装 CLI 不会影响你现有的 OpenCode 配置，也不会和你已安装的其他 OpenCode 插件（比如 oh-my-opencode）产生冲突。两者可以并行使用，互不干扰。
+
+功能层面，两个版本提供完全一致的体验。8 Agent 团队、内置 Skills、记忆系统、CLI 命令、MCP 集成，不论你选哪个版本都是一样的。选择任何一个都不会损失功能。
+
+如果你想要一个开箱即用的独立体验，或者你已经在用其他 OpenCode 插件、希望保持环境隔离，选 CLI。如果你已经是 OpenCode 用户，只想把 newtype 的 Agent 团队加到现有工作流里，插件版更轻量。
+
+支持平台：macOS（Apple Silicon / Intel）、Linux（x64 / ARM64）、Windows（x64）。
+
 ## 安装与使用
 
 newtype OS 同时面向人类和 Agent。
@@ -78,104 +101,6 @@ nt init
 
 注入后，这些 Agent 就知道何时以及如何调用 `nt research`、`nt pipeline` 等命令来增强自身能力。
 
-## Agent 团队
-
-| Agent            | 角色   | 职责                                 |
-| ---------------- | ------ | ------------------------------------ |
-| **Chief**        | 主编   | 你的对话入口——思考伙伴 + 任务协调    |
-| **Deputy**       | 副主编 | Chief 的执行层，调度下游专家         |
-| **Researcher**   | 研究员 | 外部情报搜集、趋势发现               |
-| **Fact-Checker** | 核查员 | 事实验证、来源可信度评估             |
-| **Archivist**    | 档案员 | 内部知识库检索与关联                 |
-| **Extractor**    | 提取员 | PDF/图片/网页内容提取，转为 Markdown |
-| **Writer**       | 撰稿人 | 将素材转化为结构化初稿               |
-| **Editor**       | 编辑   | 语言润色、逻辑加固、风格统一         |
-
-**你只需要与 Chief 对话。** Chief 会根据需要自动调度其他 Agent。
-
-## 内置 Skills
-
-Agent 在执行任务时会自动加载对应的 Skill 框架：
-
-| Skill                  | 命令                  | 说明                                                      |
-| ---------------------- | --------------------- | --------------------------------------------------------- |
-| **Super Analyst**      | `/super-analyst`      | 12 种分析框架（SWOT、波特五力、第一性原理等）             |
-| **Super Writer**       | `/super-writer`       | 6 种写作方法论（W.R.I.T.E、AIDA、叙事等）                 |
-| **Super Fact-Checker** | `/super-fact-checker` | 系统化事实核查 + 来源可信度评估                           |
-| **Super Editor**       | `/super-editor`       | 四层编辑：结构 → 段落 → 句子 → 用词                       |
-| **Super Interviewer**  | `/super-interviewer`  | 深度对话技巧，用于需求挖掘和头脑风暴                      |
-| **Super Obsidian**     | `/super-obsidian`     | Obsidian CLI 优先的笔记库操作：搜索、阅读、创建与管理笔记 |
-
-Chief 在任务需要结构化框架时会自动加载对应 Skill，你也可以通过斜杠命令手动触发。当检测到 Obsidian vault（`.obsidian/` 目录）时，Super Obsidian 会自动加载。
-
-## CLI 命令
-
-除了 TUI 交互界面，newtype 还提供一组面向命令行和 AI Agent 调用的专业命令（均支持 `--json` 输出）：
-
-| 命令                    | 调度的 Agent              | 说明                                           |
-| ----------------------- | ------------------------- | ---------------------------------------------- |
-| `nt research [topic]`   | Researcher + Fact-Checker | 深度调研 + 来源验证                            |
-| `nt write [topic]`      | Writer                    | 多风格内容生成                                 |
-| `nt edit [file]`        | Editor                    | 四层内容精修                                   |
-| `nt fact-check [topic]` | Fact-Checker              | 事实核查与交叉验证                             |
-| `nt analyze [topic]`    | Chief + Researcher        | 基于框架的结构化分析                           |
-| `nt extract`            | Extractor                 | 从文件/URL/图片提取内容                        |
-| `nt archive <action>`   | Archivist                 | 知识库存取与语义搜索                           |
-| `nt pipeline [topic]`   | 全流程编排                | Research → Analyze → Write → Fact-check → Edit |
-
-示例：
-
-```bash
-# 研究一个主题并输出报告
-nt research "AI Agent 架构趋势 2026" -o research.md
-
-# 基于调研结果写文章
-nt write --input research.md --style newsletter -o draft.md
-
-# 全流程一键执行
-nt pipeline "MCP 协议的未来" --style essay --output-dir ./output/
-```
-
-## 微信集成
-
-newtype CLI 内置了 [WeClaw](https://github.com/fastclaw-ai/weclaw) 集成，通过 [ACP（Agent Client Protocol）](https://github.com/nicepkg/acp) 将你的微信与完整 Agent 团队打通。在微信里给自己发一条消息，Chief 就会接手处理——调研、写作、核查，全部在微信完成。
-
-| 命令               | 说明                                      |
-| ------------------ | ----------------------------------------- |
-| `nt wechat setup`  | 下载 WeClaw 二进制文件 + 扫码绑定微信     |
-| `nt wechat start`  | 启动微信 Agent 桥接（启动前自动检测更新） |
-| `nt wechat stop`   | 停止微信 Agent 桥接                       |
-| `nt wechat status` | 查看已安装版本和运行状态                  |
-
-快速开始：
-
-```bash
-nt wechat setup    # 首次：下载 + 扫码登录
-nt wechat start    # 启动桥接守护进程
-```
-
-桥接进程在后台运行。微信消息通过 newtype 的 ACP 服务器路由，使用你配置的模型调度 Chief 处理。微信端无需 API Key——使用的是微信官方 [iLink API](https://ilinkai.weixin.qq.com)。
-
-## 记忆系统
-
-newtype 内置自动记忆系统，无需手动管理：
-
-- **每日摘要**：会话空闲后自动生成 LLM 摘要，存储于 `.newtype/memory/YYYY-MM-DD.md`
-- **完整记录**：每个会话的全量对话保存在 `.newtype/memory/full/`
-- **长期记忆**：每 7 天自动将旧日志归档到 `.newtype/MEMORY.md`
-- **自动召回**：对话时自动检索相关记忆注入上下文，无需重复说明
-
-使用 `/memory-consolidate` 可手动触发归档。
-
-## 知识库
-
-newtype 提供两层知识库初始化命令，帮助 Agent 快速理解项目：
-
-| 命令         | 生成文件       | 说明                                                      |
-| ------------ | -------------- | --------------------------------------------------------- |
-| `/init`      | `AGENTS.md`    | 项目级指令文件，定义 Agent 在当前项目中的行为规范和上下文 |
-| `/init-deep` | `KNOWLEDGE.md` | 深度知识索引，自动扫描项目结构并生成详细的代码库地图      |
-
 ## 配置
 
 ### 连接模型供应商
@@ -208,15 +133,6 @@ nt auth login
 
 全部 8 个 Agent 均可独立配置模型和参数。
 
-### MCP 服务器
-
-| MCP                     | 默认状态 | 配置           |
-| ----------------------- | -------- | -------------- |
-| **websearch**（Exa）    | 已启用   | 无需配置       |
-| **sequential-thinking** | 已启用   | 无需配置       |
-| **tavily**              | 未启用   | 需要 `api_key` |
-| **firecrawl**           | 未启用   | 需要 `api_key` |
-
 ### 自定义 Chief 人格
 
 创建 `.newtype/SOUL.md`（OpenCode 插件为 `.opencode/SOUL.md`）来定制 Chief 的沟通风格：
@@ -236,18 +152,112 @@ nt auth login
 }
 ```
 
-## 对比
+## 功能
 
-|              | @newtype-os/plugin（插件）   | @newtype-os/cli（CLI）           |
-| ------------ | ---------------------------- | -------------------------------- |
-| **性质**     | OpenCode 插件，开源          | 独立终端应用，闭源               |
-| **安装**     | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
-| **依赖**     | 需要 OpenCode                | 自包含，无需其他依赖             |
-| **启动**     | `opencode`                   | `nt`                             |
-| **配置目录** | `~/.config/opencode/`        | `~/.config/newtype/`             |
-| **项目目录** | `.opencode/`                 | `.newtype/`                      |
+### Agent 团队
 
-支持平台：macOS（Apple Silicon / Intel）、Linux（x64 / ARM64）、Windows（x64）。
+| Agent            | 角色   | 职责                                 |
+| ---------------- | ------ | ------------------------------------ |
+| **Chief**        | 主编   | 你的对话入口——思考伙伴 + 任务协调    |
+| **Deputy**       | 副主编 | Chief 的执行层，调度下游专家         |
+| **Researcher**   | 研究员 | 外部情报搜集、趋势发现               |
+| **Fact-Checker** | 核查员 | 事实验证、来源可信度评估             |
+| **Archivist**    | 档案员 | 内部知识库检索与关联                 |
+| **Extractor**    | 提取员 | PDF/图片/网页内容提取，转为 Markdown |
+| **Writer**       | 撰稿人 | 将素材转化为结构化初稿               |
+| **Editor**       | 编辑   | 语言润色、逻辑加固、风格统一         |
+
+**你只需要与 Chief 对话。** Chief 会根据需要自动调度其他 Agent。
+
+### 内置 Skills 与 MCP 服务器
+
+Agent 在执行任务时会自动加载对应的 Skill 框架：
+
+| Skill                  | 命令                  | 说明                                                      |
+| ---------------------- | --------------------- | --------------------------------------------------------- |
+| **Super Analyst**      | `/super-analyst`      | 12 种分析框架（SWOT、波特五力、第一性原理等）             |
+| **Super Writer**       | `/super-writer`       | 6 种写作方法论（W.R.I.T.E、AIDA、叙事等）                 |
+| **Super Fact-Checker** | `/super-fact-checker` | 系统化事实核查 + 来源可信度评估                           |
+| **Super Editor**       | `/super-editor`       | 四层编辑：结构 → 段落 → 句子 → 用词                       |
+| **Super Interviewer**  | `/super-interviewer`  | 深度对话技巧，用于需求挖掘和头脑风暴                      |
+| **Super Obsidian**     | `/super-obsidian`     | Obsidian CLI 优先的笔记库操作：搜索、阅读、创建与管理笔记 |
+
+Chief 在任务需要结构化框架时会自动加载对应 Skill，你也可以通过斜杠命令手动触发。当检测到 Obsidian vault（`.obsidian/` 目录）时，Super Obsidian 会自动加载。
+
+| MCP                     | 默认状态 | 配置           |
+| ----------------------- | -------- | -------------- |
+| **websearch**（Exa）    | 已启用   | 无需配置       |
+| **sequential-thinking** | 已启用   | 无需配置       |
+| **tavily**              | 未启用   | 需要 `api_key` |
+| **firecrawl**           | 未启用   | 需要 `api_key` |
+
+### CLI 命令
+
+除了 TUI 交互界面，newtype 还提供一组面向命令行和 AI Agent 调用的专业命令（均支持 `--json` 输出）：
+
+| 命令                    | 调度的 Agent              | 说明                                           |
+| ----------------------- | ------------------------- | ---------------------------------------------- |
+| `nt research [topic]`   | Researcher + Fact-Checker | 深度调研 + 来源验证                            |
+| `nt write [topic]`      | Writer                    | 多风格内容生成                                 |
+| `nt edit [file]`        | Editor                    | 四层内容精修                                   |
+| `nt fact-check [topic]` | Fact-Checker              | 事实核查与交叉验证                             |
+| `nt analyze [topic]`    | Chief + Researcher        | 基于框架的结构化分析                           |
+| `nt extract`            | Extractor                 | 从文件/URL/图片提取内容                        |
+| `nt archive <action>`   | Archivist                 | 知识库存取与语义搜索                           |
+| `nt pipeline [topic]`   | 全流程编排                | Research → Analyze → Write → Fact-check → Edit |
+
+示例：
+
+```bash
+# 研究一个主题并输出报告
+nt research "AI Agent 架构趋势 2026" -o research.md
+
+# 基于调研结果写文章
+nt write --input research.md --style newsletter -o draft.md
+
+# 全流程一键执行
+nt pipeline "MCP 协议的未来" --style essay --output-dir ./output/
+```
+
+### 微信集成
+
+newtype CLI 内置了 [WeClaw](https://github.com/fastclaw-ai/weclaw) 集成，通过 [ACP（Agent Client Protocol）](https://github.com/nicepkg/acp) 将你的微信与完整 Agent 团队打通。在微信里给自己发一条消息，Chief 就会接手处理——调研、写作、核查，全部在微信完成。
+
+| 命令               | 说明                                      |
+| ------------------ | ----------------------------------------- |
+| `nt wechat setup`  | 下载 WeClaw 二进制文件 + 扫码绑定微信     |
+| `nt wechat start`  | 启动微信 Agent 桥接（启动前自动检测更新） |
+| `nt wechat stop`   | 停止微信 Agent 桥接                       |
+| `nt wechat status` | 查看已安装版本和运行状态                  |
+
+快速开始：
+
+```bash
+nt wechat setup    # 首次：下载 + 扫码登录
+nt wechat start    # 启动桥接守护进程
+```
+
+桥接进程在后台运行。微信消息通过 newtype 的 ACP 服务器路由，使用你配置的模型调度 Chief 处理。微信端无需 API Key——使用的是微信官方 [iLink API](https://ilinkai.weixin.qq.com)。
+
+### 记忆系统
+
+newtype 内置自动记忆系统，无需手动管理：
+
+- **每日摘要**：会话空闲后自动生成 LLM 摘要，存储于 `.newtype/memory/YYYY-MM-DD.md`
+- **完整记录**：每个会话的全量对话保存在 `.newtype/memory/full/`
+- **长期记忆**：每 7 天自动将旧日志归档到 `.newtype/MEMORY.md`
+- **自动召回**：对话时自动检索相关记忆注入上下文，无需重复说明
+
+使用 `/memory-consolidate` 可手动触发归档。
+
+### 知识库
+
+newtype 提供两层知识库初始化命令，帮助 Agent 快速理解项目：
+
+| 命令         | 生成文件       | 说明                                                      |
+| ------------ | -------------- | --------------------------------------------------------- |
+| `/init`      | `AGENTS.md`    | 项目级指令文件，定义 Agent 在当前项目中的行为规范和上下文 |
+| `/init-deep` | `KNOWLEDGE.md` | 深度知识索引，自动扫描项目结构并生成详细的代码库地图      |
 
 ## 链接
 
