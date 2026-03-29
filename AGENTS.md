@@ -168,14 +168,19 @@ newtype-profile 存在两个版本，代码已经产生差异，**不能混用**
 
 | | 独立插件 (本仓库) | 内嵌插件 (newtype-cli) |
 |---|---|---|
-| **仓库** | `newtype-profile` | `newtype-cli/packages/newtype-profile/` |
-| **本地文件夹** | `newtype-plugin`（原 `newtype-profile`） | `newtype-os`（原 `newtype-cli`） |
+| **GitHub 仓库** | https://github.com/newtype-01/newtype-os | https://github.com/newtype-01/newtype-cli |
+| **npm 包名** | `@newtype-os/plugin` | `@newtype-os/cli` |
+| **本地文件夹** | `newtype-plugin` | `newtype-os` |
 | **用途** | 作为 OpenCode 插件安装 | 内嵌在 Newtype CLI 产品中 |
 | **配置路径** | `~/.config/opencode/newtype-profile.json` | `~/.config/newtype/newtype-profile.json` |
 | **项目路径** | `<project>/.opencode/` | `<project>/.newtype/` |
 | **品牌文案** | 保持 OpenCode 相关措辞 | 所有用户可见文案改为 "Newtype" |
 | **config scope** | `"opencode"` | `"newtype"` |
-| **发布方式** | `npm publish` 独立发布 | 随 newtype-cli CI 一起构建 |
+| **发布方式** | `BUMP=patch bun run script/publish.ts` 本地发布 | `gh workflow run publish-newtype.yml` CI 发布 |
+
+> **⚠️ 容易搞混的点**：
+> - 本地文件夹 `newtype-plugin` → 对应 GitHub 仓库 `newtype-os`（不是 `newtype-plugin`！）
+> - 本地文件夹 `newtype-os` → 对应 GitHub 仓库 `newtype-cli`（不是 `newtype-os`！）
 
 ### 已产生的代码差异 (v0.0.4+)
 
