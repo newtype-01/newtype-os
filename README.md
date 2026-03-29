@@ -175,6 +175,7 @@ Agents auto-load the corresponding skill framework when executing tasks:
 
 | Skill                  | Command               | Description                                                                 |
 | ---------------------- | --------------------- | --------------------------------------------------------------------------- |
+| **Super Workflow**     | `/super-workflow`     | End-to-end content production discipline with mandatory quality gates: standards-first → ideation → outline → draft → review → diagnosis → pre-publish → delivery |
 | **Super Analyst**      | `/super-analyst`      | 12 analysis frameworks (SWOT, Porter's Five Forces, First Principles, etc.) |
 | **Super Writer**       | `/super-writer`       | 6 writing methodologies (W.R.I.T.E, AIDA, Storytelling, etc.)               |
 | **Super Fact-Checker** | `/super-fact-checker` | Systematic fact-checking + source credibility assessment                    |
@@ -182,7 +183,7 @@ Agents auto-load the corresponding skill framework when executing tasks:
 | **Super Interviewer**  | `/super-interviewer`  | Deep dialogue techniques for requirement mining and brainstorming           |
 | **Super Obsidian**     | `/super-obsidian`     | Obsidian CLI-first vault operations: search, read, create, and manage notes |
 
-Chief auto-loads the relevant skill when a task calls for a structured framework. You can also trigger them manually via slash commands. Super Obsidian is auto-loaded when an Obsidian vault (`.obsidian/` directory) is detected.
+Super Workflow is the orchestration layer that governs the entire content lifecycle — it defines *when* to do *what* and *how* to verify quality at each stage. Super Writer and Super Editor provide the professional techniques for execution. Chief auto-loads the relevant skill when a task calls for a structured framework. You can also trigger them manually via slash commands. Super Obsidian is auto-loaded when an Obsidian vault (`.obsidian/` directory) is detected.
 
 | MCP                     | Default  | Config             |
 | ----------------------- | -------- | ------------------ |

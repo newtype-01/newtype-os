@@ -29,3 +29,6 @@ yarn.lock
 test-injection/
 notepad.md
 oauth-success.html
+
+# Project-level agent instructions (contains internal info, not for public repo)
+AGENTS.md

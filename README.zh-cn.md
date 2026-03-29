@@ -175,6 +175,7 @@ Agent 在执行任务时会自动加载对应的 Skill 框架：
 
 | Skill                  | 命令                  | 说明                                                      |
 | ---------------------- | --------------------- | --------------------------------------------------------- |
+| **Super Workflow**     | `/super-workflow`     | 端到端内容生产工作流纪律，含强制质量门控：定标准 → 选题 → 大纲 → 写作 → 审稿 → 诊断 → 终检 → 交付 |
 | **Super Analyst**      | `/super-analyst`      | 12 种分析框架（SWOT、波特五力、第一性原理等）             |
 | **Super Writer**       | `/super-writer`       | 6 种写作方法论（W.R.I.T.E、AIDA、叙事等）                 |
 | **Super Fact-Checker** | `/super-fact-checker` | 系统化事实核查 + 来源可信度评估                           |
@@ -182,7 +183,7 @@ Agent 在执行任务时会自动加载对应的 Skill 框架：
 | **Super Interviewer**  | `/super-interviewer`  | 深度对话技巧，用于需求挖掘和头脑风暴                      |
 | **Super Obsidian**     | `/super-obsidian`     | Obsidian CLI 优先的笔记库操作：搜索、阅读、创建与管理笔记 |
 
-Chief 在任务需要结构化框架时会自动加载对应 Skill，你也可以通过斜杠命令手动触发。当检测到 Obsidian vault（`.obsidian/` 目录）时，Super Obsidian 会自动加载。
+Super Workflow 是管控整个内容生命周期的编排层——它定义*何时*做*什么*，以及如何在每个阶段验证质量。Super Writer 和 Super Editor 提供执行层面的专业技法。Chief 在任务需要结构化框架时会自动加载对应 Skill，你也可以通过斜杠命令手动触发。当检测到 Obsidian vault（`.obsidian/` 目录）时，Super Obsidian 会自动加载。
 
 | MCP                     | 默认状态 | 配置           |
 | ----------------------- | -------- | -------------- |
