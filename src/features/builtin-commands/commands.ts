@@ -135,6 +135,20 @@ $ARGUMENTS
 </user-request>`,
     argumentHint: "<vault operation or search query>",
   },
+  "super-workflow": {
+    description:
+      "(builtin) End-to-end content production workflow with mandatory quality gates",
+    template: `<command-instruction>
+Use the skill tool to load the super-workflow skill, then follow its instructions.
+
+Call: skill({ name: "super-workflow" })
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "<content production task>",
+  },
   "memory-consolidate": {
     description: "(builtin) Consolidate daily memory logs into MEMORY.md",
     template: `<command-instruction>
