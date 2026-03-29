@@ -169,6 +169,7 @@ newtype-profile 存在两个版本，代码已经产生差异，**不能混用**
 | | 独立插件 (本仓库) | 内嵌插件 (newtype-cli) |
 |---|---|---|
 | **仓库** | `newtype-profile` | `newtype-cli/packages/newtype-profile/` |
+| **本地文件夹** | `newtype-plugin`（原 `newtype-profile`） | `newtype-os`（原 `newtype-cli`） |
 | **用途** | 作为 OpenCode 插件安装 | 内嵌在 Newtype CLI 产品中 |
 | **配置路径** | `~/.config/opencode/newtype-profile.json` | `~/.config/newtype/newtype-profile.json` |
 | **项目路径** | `<project>/.opencode/` | `<project>/.newtype/` |
@@ -267,7 +268,7 @@ newtype --help
 ### Repository Structure
 
 ```
-newtype-cli/                          # Fork of anomalyco/opencode
+newtype-cli/                          # Fork of anomalyco/opencode (local folder: newtype-os)
 ├── packages/opencode/                # Core CLI (name=newtype-cli, bin=newtype)
 │   ├── src/global/index.ts           # app = "newtype"
 │   ├── src/config/config.ts          # .newtype/ dirs
