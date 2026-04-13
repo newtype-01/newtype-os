@@ -1,6 +1,6 @@
 import type { CommandDefinition } from "../claude-code-command-loader";
 import type { BuiltinCommandName, BuiltinCommands } from "./types";
-import { INIT_DEEP_TEMPLATE } from "./templates/init-deep";
+import { WIKI_TEMPLATE } from "./templates/wiki";
 import {
   RALPH_LOOP_TEMPLATE,
   CANCEL_RALPH_TEMPLATE,
@@ -14,17 +14,17 @@ const BUILTIN_COMMAND_DEFINITIONS: Record<
   BuiltinCommandName,
   Omit<CommandDefinition, "name">
 > = {
-  "init-deep": {
+  wiki: {
     description:
-      "(builtin) Generate KNOWLEDGE.md index for document repositories",
+      "(builtin) Generate project wiki: KNOWLEDGE.md + .opencode/wiki/",
     template: `<command-instruction>
-${INIT_DEEP_TEMPLATE}
+${WIKI_TEMPLATE}
 </command-instruction>
 
 <user-request>
 $ARGUMENTS
 </user-request>`,
-    argumentHint: "[--create-new] [--max-depth=N]",
+    argumentHint: "[path] [lint] [--create-new] [--max-depth=N]",
   },
   "ralph-loop": {
     description: "(builtin) Start self-referential task loop until completion",

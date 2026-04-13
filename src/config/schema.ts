@@ -1,16 +1,12 @@
-import { z } from "zod"
-import {
-  AnyMcpNameSchema,
-  McpNameSchema,
-  McpConfigSchema,
-} from "../mcp/types"
+import { z } from "zod";
+import { AnyMcpNameSchema, McpNameSchema, McpConfigSchema } from "../mcp/types";
 
-const PermissionValue = z.enum(["ask", "allow", "deny"])
+const PermissionValue = z.enum(["ask", "allow", "deny"]);
 
 const BashPermission = z.union([
   PermissionValue,
   z.record(z.string(), PermissionValue),
-])
+]);
 
 const AgentPermissionSchema = z.object({
   edit: PermissionValue.optional(),
@@ -18,7 +14,7 @@ const AgentPermissionSchema = z.object({
   webfetch: PermissionValue.optional(),
   doom_loop: PermissionValue.optional(),
   external_directory: PermissionValue.optional(),
-})
+});
 
 export const BuiltinAgentNameSchema = z.enum([
   "chief",
@@ -28,7 +24,7 @@ export const BuiltinAgentNameSchema = z.enum([
   "extractor",
   "writer",
   "editor",
-])
+]);
 
 export const BuiltinSkillNameSchema = z.enum([
   "playwright",
@@ -39,7 +35,7 @@ export const BuiltinSkillNameSchema = z.enum([
   "super-interviewer",
   "super-obsidian",
   "super-workflow",
-])
+]);
 
 export const OverridableAgentNameSchema = z.enum([
   "build",
@@ -52,9 +48,9 @@ export const OverridableAgentNameSchema = z.enum([
   "extractor",
   "writer",
   "editor",
-])
+]);
 
-export const AgentNameSchema = BuiltinAgentNameSchema
+export const AgentNameSchema = BuiltinAgentNameSchema;
 
 export const HookNameSchema = z.enum([
   "todo-continuation-enforcer",
@@ -89,14 +85,14 @@ export const HookNameSchema = z.enum([
   "chief-orchestrator",
   "memory-system",
   "startup-config-checker",
-])
+]);
 
 export const BuiltinCommandNameSchema = z.enum([
-  "init-deep",
+  "wiki",
   "ralph-loop",
   "cancel-ralph",
   "switch",
-])
+]);
 
 export const AgentOverrideConfigSchema = z.object({
   /** @deprecated Use `category` instead. Model is inherited from category defaults. */
@@ -118,7 +114,7 @@ export const AgentOverrideConfigSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/)
     .optional(),
   permission: AgentPermissionSchema.optional(),
-})
+});
 
 export const AgentOverridesSchema = z.object({
   build: AgentOverrideConfigSchema.optional(),
@@ -131,7 +127,7 @@ export const AgentOverridesSchema = z.object({
   extractor: AgentOverrideConfigSchema.optional(),
   writer: AgentOverrideConfigSchema.optional(),
   editor: AgentOverrideConfigSchema.optional(),
-})
+});
 
 export const ClaudeCodeConfigSchema = z.object({
   mcp: z.boolean().optional(),
@@ -141,26 +137,28 @@ export const ClaudeCodeConfigSchema = z.object({
   hooks: z.boolean().optional(),
   plugins: z.boolean().optional(),
   plugins_override: z.record(z.string(), z.boolean()).optional(),
-})
+});
 
 export const ChiefAgentConfigSchema = z.object({
   disabled: z.boolean().optional(),
-})
+});
 
 export const CategoryConfigSchema = z.object({
   model: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   top_p: z.number().min(0).max(1).optional(),
   maxTokens: z.number().optional(),
-  thinking: z.object({
-    type: z.enum(["enabled", "disabled"]),
-    budgetTokens: z.number().optional(),
-  }).optional(),
+  thinking: z
+    .object({
+      type: z.enum(["enabled", "disabled"]),
+      budgetTokens: z.number().optional(),
+    })
+    .optional(),
   reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
   textVerbosity: z.enum(["low", "medium", "high"]).optional(),
   tools: z.record(z.string(), z.boolean()).optional(),
   prompt_append: z.string().optional(),
-})
+});
 
 export const BuiltinCategoryNameSchema = z.enum([
   "visual-engineering",
@@ -170,14 +168,17 @@ export const BuiltinCategoryNameSchema = z.enum([
   "most-capable",
   "writing",
   "general",
-])
+]);
 
-export const CategoriesConfigSchema = z.record(z.string(), CategoryConfigSchema)
+export const CategoriesConfigSchema = z.record(
+  z.string(),
+  CategoryConfigSchema,
+);
 
 export const CommentCheckerConfigSchema = z.object({
   /** Custom prompt to replace the default warning message. Use {{comments}} placeholder for detected comments XML. */
   custom_prompt: z.string().optional(),
-})
+});
 
 export const DynamicContextPruningConfigSchema = z.object({
   /** Enable dynamic context pruning (default: false) */
@@ -185,35 +186,52 @@ export const DynamicContextPruningConfigSchema = z.object({
   /** Notification level: off, minimal, or detailed (default: detailed) */
   notification: z.enum(["off", "minimal", "detailed"]).default("detailed"),
   /** Turn protection - prevent pruning recent tool outputs */
-  turn_protection: z.object({
-    enabled: z.boolean().default(true),
-    turns: z.number().min(1).max(10).default(3),
-  }).optional(),
+  turn_protection: z
+    .object({
+      enabled: z.boolean().default(true),
+      turns: z.number().min(1).max(10).default(3),
+    })
+    .optional(),
   /** Tools that should never be pruned */
-  protected_tools: z.array(z.string()).default([
-    "task", "todowrite", "todoread",
-    "lsp_rename", "lsp_code_action_resolve",
-    "session_read", "session_write", "session_search",
-  ]),
+  protected_tools: z
+    .array(z.string())
+    .default([
+      "task",
+      "todowrite",
+      "todoread",
+      "lsp_rename",
+      "lsp_code_action_resolve",
+      "session_read",
+      "session_write",
+      "session_search",
+    ]),
   /** Pruning strategies configuration */
-  strategies: z.object({
-    /** Remove duplicate tool calls (same tool + same args) */
-    deduplication: z.object({
-      enabled: z.boolean().default(true),
-    }).optional(),
-    /** Prune write inputs when file subsequently read */
-    supersede_writes: z.object({
-      enabled: z.boolean().default(true),
-      /** Aggressive mode: prune any write if ANY subsequent read */
-      aggressive: z.boolean().default(false),
-    }).optional(),
-    /** Prune errored tool inputs after N turns */
-    purge_errors: z.object({
-      enabled: z.boolean().default(true),
-      turns: z.number().min(1).max(20).default(5),
-    }).optional(),
-  }).optional(),
-})
+  strategies: z
+    .object({
+      /** Remove duplicate tool calls (same tool + same args) */
+      deduplication: z
+        .object({
+          enabled: z.boolean().default(true),
+        })
+        .optional(),
+      /** Prune write inputs when file subsequently read */
+      supersede_writes: z
+        .object({
+          enabled: z.boolean().default(true),
+          /** Aggressive mode: prune any write if ANY subsequent read */
+          aggressive: z.boolean().default(false),
+        })
+        .optional(),
+      /** Prune errored tool inputs after N turns */
+      purge_errors: z
+        .object({
+          enabled: z.boolean().default(true),
+          turns: z.number().min(1).max(20).default(5),
+        })
+        .optional(),
+    })
+    .optional(),
+});
 
 export const ExperimentalConfigSchema = z.object({
   aggressive_truncation: z.boolean().optional(),
@@ -228,7 +246,7 @@ export const ExperimentalConfigSchema = z.object({
   dynamic_context_pruning: DynamicContextPruningConfigSchema.optional(),
   /** Enable DCP (Dynamic Context Pruning) for compaction - runs first when token limit exceeded (default: false) */
   dcp_for_compaction: z.boolean().optional(),
-})
+});
 
 export const SkillSourceSchema = z.union([
   z.string(),
@@ -237,7 +255,7 @@ export const SkillSourceSchema = z.union([
     recursive: z.boolean().optional(),
     glob: z.string().optional(),
   }),
-])
+]);
 
 export const SkillDefinitionSchema = z.object({
   description: z.string().optional(),
@@ -252,21 +270,22 @@ export const SkillDefinitionSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
   "allowed-tools": z.array(z.string()).optional(),
   disable: z.boolean().optional(),
-})
+});
 
-export const SkillEntrySchema = z.union([
-  z.boolean(),
-  SkillDefinitionSchema,
-])
+export const SkillEntrySchema = z.union([z.boolean(), SkillDefinitionSchema]);
 
 export const SkillsConfigSchema = z.union([
   z.array(z.string()),
-  z.record(z.string(), SkillEntrySchema).and(z.object({
-    sources: z.array(SkillSourceSchema).optional(),
-    enable: z.array(z.string()).optional(),
-    disable: z.array(z.string()).optional(),
-  }).partial()),
-])
+  z.record(z.string(), SkillEntrySchema).and(
+    z
+      .object({
+        sources: z.array(SkillSourceSchema).optional(),
+        enable: z.array(z.string()).optional(),
+        disable: z.array(z.string()).optional(),
+      })
+      .partial(),
+  ),
+]);
 
 export const RalphLoopConfigSchema = z.object({
   /** Enable ralph loop functionality (default: false - opt-in feature) */
@@ -275,25 +294,25 @@ export const RalphLoopConfigSchema = z.object({
   default_max_iterations: z.number().min(1).max(1000).default(100),
   /** Custom state file directory relative to project root (default: .opencode/) */
   state_dir: z.string().optional(),
-})
+});
 
 export const BackgroundTaskConfigSchema = z.object({
   defaultConcurrency: z.number().min(1).optional(),
   providerConcurrency: z.record(z.string(), z.number().min(1)).optional(),
   modelConcurrency: z.record(z.string(), z.number().min(1)).optional(),
-})
+});
 
 export const NotificationConfigSchema = z.object({
   /** Force enable session-notification even if external notification plugins are detected (default: false) */
   force_enable: z.boolean().optional(),
-})
+});
 
 export const GitMasterConfigSchema = z.object({
   /** Add "Ultraworked with Chief" footer to commit messages (default: true) */
   commit_footer: z.boolean().default(true),
   /** Add "Co-authored-by: Chief" trailer to commit messages (default: true) */
   include_co_authored_by: z.boolean().default(true),
-})
+});
 
 /** Threshold configuration for a single agent category */
 export const ConfidenceThresholdSchema = z.object({
@@ -301,7 +320,7 @@ export const ConfidenceThresholdSchema = z.object({
   pass: z.number().min(0).max(1).optional(),
   /** Confidence score threshold for "polish" (default: 0.5) */
   polish: z.number().min(0).max(1).optional(),
-})
+});
 
 /** Agent-specific confidence thresholds */
 export const ConfidenceByAgentSchema = z.object({
@@ -317,7 +336,7 @@ export const ConfidenceByAgentSchema = z.object({
   archivist: ConfidenceThresholdSchema.optional(),
   /** Extraction thresholds */
   extractor: ConfidenceThresholdSchema.optional(),
-})
+});
 
 export const ConfidenceConfigSchema = z.object({
   /** Default thresholds for all agents */
@@ -326,7 +345,7 @@ export const ConfidenceConfigSchema = z.object({
   by_agent: ConfidenceByAgentSchema.optional(),
   /** Maximum rewrite attempts before escalating to user (default: 2) */
   max_rewrite_attempts: z.number().min(1).max(10).optional(),
-})
+});
 export const OhMyOpenCodeConfigSchema = z.object({
   $schema: z.string().optional(),
   disabled_mcps: z.array(AnyMcpNameSchema).optional(),
@@ -349,32 +368,34 @@ export const OhMyOpenCodeConfigSchema = z.object({
   git_master: GitMasterConfigSchema.optional(),
   confidence: ConfidenceConfigSchema.optional(),
   mcp: McpConfigSchema.optional(),
-})
+});
 
-export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>
-export type AgentOverrideConfig = z.infer<typeof AgentOverrideConfigSchema>
-export type AgentOverrides = z.infer<typeof AgentOverridesSchema>
-export type BackgroundTaskConfig = z.infer<typeof BackgroundTaskConfigSchema>
-export type AgentName = z.infer<typeof AgentNameSchema>
-export type HookName = z.infer<typeof HookNameSchema>
-export type BuiltinCommandName = z.infer<typeof BuiltinCommandNameSchema>
-export type BuiltinSkillName = z.infer<typeof BuiltinSkillNameSchema>
-export type ChiefAgentConfig = z.infer<typeof ChiefAgentConfigSchema>
-export type CommentCheckerConfig = z.infer<typeof CommentCheckerConfigSchema>
-export type ExperimentalConfig = z.infer<typeof ExperimentalConfigSchema>
-export type DynamicContextPruningConfig = z.infer<typeof DynamicContextPruningConfigSchema>
-export type SkillsConfig = z.infer<typeof SkillsConfigSchema>
-export type SkillDefinition = z.infer<typeof SkillDefinitionSchema>
-export type RalphLoopConfig = z.infer<typeof RalphLoopConfigSchema>
-export type NotificationConfig = z.infer<typeof NotificationConfigSchema>
-export type CategoryConfig = z.infer<typeof CategoryConfigSchema>
-export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>
-export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>
-export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>
-export type ConfidenceThreshold = z.infer<typeof ConfidenceThresholdSchema>
-export type ConfidenceByAgent = z.infer<typeof ConfidenceByAgentSchema>
-export type ConfidenceConfig = z.infer<typeof ConfidenceConfigSchema>
-export type McpConfig = z.infer<typeof McpConfigSchema>
+export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>;
+export type AgentOverrideConfig = z.infer<typeof AgentOverrideConfigSchema>;
+export type AgentOverrides = z.infer<typeof AgentOverridesSchema>;
+export type BackgroundTaskConfig = z.infer<typeof BackgroundTaskConfigSchema>;
+export type AgentName = z.infer<typeof AgentNameSchema>;
+export type HookName = z.infer<typeof HookNameSchema>;
+export type BuiltinCommandName = z.infer<typeof BuiltinCommandNameSchema>;
+export type BuiltinSkillName = z.infer<typeof BuiltinSkillNameSchema>;
+export type ChiefAgentConfig = z.infer<typeof ChiefAgentConfigSchema>;
+export type CommentCheckerConfig = z.infer<typeof CommentCheckerConfigSchema>;
+export type ExperimentalConfig = z.infer<typeof ExperimentalConfigSchema>;
+export type DynamicContextPruningConfig = z.infer<
+  typeof DynamicContextPruningConfigSchema
+>;
+export type SkillsConfig = z.infer<typeof SkillsConfigSchema>;
+export type SkillDefinition = z.infer<typeof SkillDefinitionSchema>;
+export type RalphLoopConfig = z.infer<typeof RalphLoopConfigSchema>;
+export type NotificationConfig = z.infer<typeof NotificationConfigSchema>;
+export type CategoryConfig = z.infer<typeof CategoryConfigSchema>;
+export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>;
+export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>;
+export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>;
+export type ConfidenceThreshold = z.infer<typeof ConfidenceThresholdSchema>;
+export type ConfidenceByAgent = z.infer<typeof ConfidenceByAgentSchema>;
+export type ConfidenceConfig = z.infer<typeof ConfidenceConfigSchema>;
+export type McpConfig = z.infer<typeof McpConfigSchema>;
 
 export {
   AnyMcpNameSchema,
@@ -385,4 +406,4 @@ export {
   type McpTavilyConfig,
   type McpFirecrawlConfig,
   type McpFilesystemConfig,
-} from "../mcp/types"
+} from "../mcp/types";

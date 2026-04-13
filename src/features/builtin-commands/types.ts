@@ -1,7 +1,7 @@
 import type { CommandDefinition } from "../claude-code-command-loader";
 
 export type BuiltinCommandName =
-  | "init-deep"
+  | "wiki"
   | "ralph-loop"
   | "cancel-ralph"
   | "switch"
