@@ -31,14 +31,14 @@ You ↔ Chief (Editor-in-Chief)
 
 ## Comparison
 
-|                 | @newtype-os/plugin           | @newtype-os/cli                  |
-| --------------- | ---------------------------- | -------------------------------- |
-| **Nature**      | OpenCode plugin              | Standalone terminal app          |
-| **Install**     | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
-| **Requires**    | OpenCode                     | Self-contained, no dependencies  |
-| **Launch**      | `opencode`                   | `nt`                             |
-| **Config dir**  | `~/.config/opencode/`        | `~/.config/newtype/`             |
-| **Project dir** | `.opencode/`                 | `.newtype/`                      |
+|                 | newtype Workstation                         | @newtype-os/cli                  | @newtype-os/plugin           |
+| --------------- | ------------------------------------------- | -------------------------------- | ---------------------------- |
+| **Nature**      | Native Mac content workspace                | Standalone terminal app          | OpenCode plugin              |
+| **Install**     | Download the DMG                            | `npm install -g @newtype-os/cli` | `bun add @newtype-os/plugin` |
+| **Requires**    | Apple Silicon, macOS 11.5 or later          | Self-contained, no dependencies  | OpenCode                     |
+| **Launch**      | Applications → newtype Workstation          | `nt`                             | `opencode`                   |
+| **Config dir**  | `~/.config/newtype/`                        | `~/.config/newtype/`             | `~/.config/opencode/`        |
+| **Project dir** | `.newtype/`                                 | `.newtype/`                      | `.opencode/`                 |
 
 ### Key Differences
 
@@ -50,7 +50,7 @@ From a feature standpoint, both versions deliver the same experience. The 8-agen
 
 If you want a self-contained setup that works out of the box, or if you already run other OpenCode plugins and prefer clean separation, go with the CLI. If you're already an OpenCode user and simply want to add the newtype agent team to your existing workflow, the plugin is the lighter-weight option.
 
-Supported platforms: macOS (Apple Silicon / Intel), Linux (x64 / ARM64), Windows (x64).
+newtype Workstation currently supports Apple Silicon Macs only. The CLI supports macOS (Apple Silicon / Intel), Linux (x64 / ARM64), and Windows (x64).
 
 ## Installation & Usage
 
@@ -58,7 +58,21 @@ newtype OS is designed for both humans and agents.
 
 ### For Humans
 
-#### Option 1: newtype CLI (Recommended)
+#### Option 1: newtype Workstation for Mac (Recommended)
+
+A native content workspace with a project file tree, Markdown editing and preview, and the full newtype OS TUI built into the right sidebar.
+
+[Download the latest Apple Silicon DMG](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+
+Requirements: Apple Silicon (M1 or later) and macOS 11.5 or later. Intel Macs are not supported yet.
+
+Open the downloaded DMG and drag `newtype Workstation` into the Applications folder. The app and the CLI share the same project files, `.newtype/` data, and `~/.config/newtype/` configuration.
+
+[View Workstation release history](https://github.com/newtype-01/newtype-os/releases?q=workstation-v)
+
+> This repository hosts the official newtype Workstation release binaries and update files. Its source tree is the open-source `@newtype-os/plugin`; the Workstation source code is not included here.
+
+#### Option 2: newtype CLI
 
 A ready-to-use terminal AI assistant with the full agent team built in.
 
@@ -69,7 +83,7 @@ npm install -g @newtype-os/cli
 nt
 ```
 
-#### Option 2: As an OpenCode Plugin
+#### Option 3: As an OpenCode Plugin
 
 If you already use [OpenCode](https://github.com/anomalyco/opencode):
 

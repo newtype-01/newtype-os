@@ -31,14 +31,14 @@ newtype OS 的内核是一套 **8 Agent 多层编排系统**，配备专业 Skil
 
 ## 对比
 
-|              | @newtype-os/plugin（插件）   | @newtype-os/cli（CLI）           |
-| ------------ | ---------------------------- | -------------------------------- |
-| **性质**     | OpenCode 插件                | 独立终端应用                     |
-| **安装**     | `bun add @newtype-os/plugin` | `npm install -g @newtype-os/cli` |
-| **依赖**     | 需要 OpenCode                | 自包含，无需其他依赖             |
-| **启动**     | `opencode`                   | `nt`                             |
-| **配置目录** | `~/.config/opencode/`        | `~/.config/newtype/`             |
-| **项目目录** | `.opencode/`                 | `.newtype/`                      |
+|              | newtype Workstation                  | @newtype-os/cli（CLI）           | @newtype-os/plugin（插件）   |
+| ------------ | ------------------------------------ | -------------------------------- | ---------------------------- |
+| **性质**     | 原生 Mac 内容创作工作台              | 独立终端应用                     | OpenCode 插件                |
+| **安装**     | 下载 DMG                             | `npm install -g @newtype-os/cli` | `bun add @newtype-os/plugin` |
+| **依赖**     | Apple Silicon、macOS 11.5 或更高版本 | 自包含，无需其他依赖             | 需要 OpenCode                |
+| **启动**     | 应用程序 → newtype Workstation       | `nt`                             | `opencode`                   |
+| **配置目录** | `~/.config/newtype/`                 | `~/.config/newtype/`             | `~/.config/opencode/`        |
+| **项目目录** | `.newtype/`                          | `.newtype/`                      | `.opencode/`                 |
 
 ### 核心差异
 
@@ -50,7 +50,7 @@ CLI 使用独立的配置命名空间：全局配置位于 `~/.config/newtype/`�
 
 如果你想要一个开箱即用的独立体验，或者你已经在用其他 OpenCode 插件、希望保持环境隔离，选 CLI。如果你已经是 OpenCode 用户，只想把 newtype 的 Agent 团队加到现有工作流里，插件版更轻量。
 
-支持平台：macOS（Apple Silicon / Intel）、Linux（x64 / ARM64）、Windows（x64）。
+newtype Workstation 目前仅支持 Apple Silicon Mac。CLI 支持 macOS（Apple Silicon / Intel）、Linux（x64 / ARM64）和 Windows（x64）。
 
 ## 安装与使用
 
@@ -58,7 +58,21 @@ newtype OS 同时面向人类和 Agent。
 
 ### 面向人类
 
-#### 方式一：newtype CLI（推荐）
+#### 方式一：newtype Workstation Mac 版（推荐）
+
+原生内容创作工作台，提供项目文件树、Markdown 编辑与预览，并在右侧栏内置完整的 newtype OS TUI。
+
+[下载最新版 Apple Silicon DMG](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+
+系统要求：Apple Silicon（M1 或更新芯片），macOS 11.5 或更高版本。暂不支持 Intel Mac。
+
+打开下载的 DMG，将 `newtype Workstation` 拖入“应用程序”文件夹即可。App 与 CLI 共享项目文件、`.newtype/` 数据和 `~/.config/newtype/` 配置。
+
+[查看 Workstation 历史版本](https://github.com/newtype-01/newtype-os/releases?q=workstation-v)
+
+> 本仓库用于托管 newtype Workstation 的官方安装包和更新文件；仓库中的开源代码是 `@newtype-os/plugin` 插件版，不包含 Workstation 源码。
+
+#### 方式二：newtype CLI
 
 开箱即用的终端 AI 助手，内置完整 Agent 团队。
 
@@ -69,7 +83,7 @@ npm install -g @newtype-os/cli
 nt
 ```
 
-#### 方式二：作为 OpenCode 插件
+#### 方式三：作为 OpenCode 插件
 
 如果你已在使用 [OpenCode](https://github.com/anomalyco/opencode)：
 
