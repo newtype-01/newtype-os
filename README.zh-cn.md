@@ -58,15 +58,17 @@ newtype OS 同时面向人类和 Agent。
 
 ### 面向人类
 
-#### 方式一：newtype Workstation Mac 版（推荐）
+#### 方式一：newtype Workstation Mac 版（未签名测试版）
 
 原生内容创作工作台，提供项目文件树、Markdown 编辑与预览，并在右侧栏内置完整的 newtype OS TUI。
 
-[下载最新版 Apple Silicon DMG](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+[下载 newtype Workstation 0.2.0 Beta 1 Apple Silicon 版](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.1/newtype-workstation-mac-arm64.dmg)
 
 系统要求：Apple Silicon（M1 或更新芯片），macOS 11.5 或更高版本。暂不支持 Intel Mac。
 
-打开下载的 DMG，将 `newtype Workstation` 拖入“应用程序”文件夹即可。App 与 CLI 共享项目文件、`.newtype/` 数据和 `~/.config/newtype/` 配置。
+> 这是供早期测试的未签名、未公证 Beta 版本。首次尝试启动后，可能需要进入“系统设置 → 隐私与安全性”，点击“仍要打开”。请只从这个 GitHub Release 下载，并核对页面提供的 SHA-256。
+
+打开下载的 DMG，将 `newtype Workstation` 拖入“应用程序”文件夹即可。App 与 CLI 共享项目文件、`.newtype/` 数据和 `~/.config/newtype/` 配置。此 Beta 版本暂不启用自动更新。
 
 [查看 Workstation 历史版本](https://github.com/newtype-01/newtype-os/releases?q=workstation-v)
 

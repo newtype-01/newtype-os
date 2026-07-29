@@ -58,19 +58,21 @@ newtype OS is designed for both humans and agents.
 
 ### For Humans
 
-#### Option 1: newtype Workstation for Mac (Recommended)
+#### Option 1: newtype Workstation for Mac (Unsigned Beta)
 
 A native content workspace with a project file tree, Markdown editing and preview, and the full newtype OS TUI built into the right sidebar.
 
-[Download the latest Apple Silicon DMG](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+[Download newtype Workstation 0.2.0 Beta 1 for Apple Silicon](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.1/newtype-workstation-mac-arm64.dmg)
 
 Requirements: Apple Silicon (M1 or later) and macOS 11.5 or later. Intel Macs are not supported yet.
 
-Open the downloaded DMG and drag `newtype Workstation` into the Applications folder. The app and the CLI share the same project files, `.newtype/` data, and `~/.config/newtype/` configuration.
+> This is an unsigned, unnotarized beta for early testing. After trying to open it once, macOS may require you to choose **Open Anyway** in **System Settings → Privacy & Security**. Download it only from this GitHub Release and verify the published SHA-256.
+
+Open the downloaded DMG and drag `newtype Workstation` into the Applications folder. The app and the CLI share the same project files, `.newtype/` data, and `~/.config/newtype/` configuration. Automatic updates are not enabled for this beta.
 
 [View Workstation release history](https://github.com/newtype-01/newtype-os/releases?q=workstation-v)
 
-> This repository hosts the official newtype Workstation release binaries and update files. Its source tree is the open-source `@newtype-os/plugin`; the Workstation source code is not included here.
+> This repository hosts newtype Workstation release binaries and update files. Its source tree is the open-source `@newtype-os/plugin`; the Workstation source code is not included here.
 
 #### Option 2: newtype CLI
 
