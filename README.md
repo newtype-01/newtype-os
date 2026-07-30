@@ -62,7 +62,7 @@ newtype OS is designed for both humans and agents.
 
 A native content workspace with a project file tree, Markdown editing and preview, and the full newtype OS TUI built into the right sidebar.
 
-[Download newtype Workstation 0.2.0 Beta 1 for Apple Silicon](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.1/newtype-workstation-mac-arm64.dmg)
+[Download newtype Workstation 0.2.0 Beta 2 for Apple Silicon](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.2/newtype-workstation-mac-arm64.dmg)
 
 Requirements: Apple Silicon (M1 or later) and macOS 11.5 or later. Intel Macs are not supported yet.
 

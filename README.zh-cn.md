@@ -62,7 +62,7 @@ newtype OS 同时面向人类和 Agent。
 
 原生内容创作工作台，提供项目文件树、Markdown 编辑与预览，并在右侧栏内置完整的 newtype OS TUI。
 
-[下载 newtype Workstation 0.2.0 Beta 1 Apple Silicon 版](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.1/newtype-workstation-mac-arm64.dmg)
+[下载 newtype Workstation 0.2.0 Beta 2 Apple Silicon 版](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.2.0-beta.2/newtype-workstation-mac-arm64.dmg)
 
 系统要求：Apple Silicon（M1 或更新芯片），macOS 11.5 或更高版本。暂不支持 Intel Mac。
 
