@@ -9,7 +9,7 @@
 由 [huangyihe（黄益贺）](https://x.com/huangyihe) 创作。
 
 <p>
-  <a href="https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.3.0/newtype-workstation-mac-arm64.dmg"><strong>下载 newtype Workstation</strong></a>
+  <a href="https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg"><strong>下载 newtype Workstation</strong></a>
   ·
   <a href="#newtype-cli"><strong>安装 newtype CLI</strong></a>
   ·
@@ -60,9 +60,9 @@ newtype OS 是一套**专为内容生产打造的 8 Agent 多层编排系统**�
 
 ### newtype Workstation
 
-原生 Mac 内容创作工作台，提供项目文件树、Markdown 编辑与预览，并在右侧栏中内置 newtype OS Agent 界面。
+原生 Mac 内容创作工作台，提供接近 Ulysses 的三栏写作界面、Markdown 编辑与预览，以及独立悬浮的 newtype OS 终端。
 
-[**下载 newtype Workstation 0.3.0 Apple Silicon 版**](https://github.com/newtype-01/newtype-os/releases/download/workstation-v0.3.0/newtype-workstation-mac-arm64.dmg)
+[**下载 newtype Workstation 0.3.14 Apple Silicon 版**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
 
 系统要求：Apple Silicon（M1 或更新芯片），macOS 11.5 或更高版本。
 
