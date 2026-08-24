@@ -62,7 +62,7 @@ The products share the same newtype agent-team lineage, but they are no longer p
 
 A native Mac content workspace with a Ulysses-inspired three-column writing interface, Markdown editing and preview, and a separate floating newtype OS terminal.
 
-[**Download newtype Workstation 0.3.14 for Apple Silicon**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+[**Download newtype Workstation 0.3.15 for Apple Silicon**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
 
 Requirements: Apple Silicon (M1 or later) and macOS 11.5 or later.
 
