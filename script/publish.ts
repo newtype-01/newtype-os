@@ -133,10 +133,6 @@ async function buildAndPublish(version: string): Promise<void> {
   const tagArgs = distTag ? ["--tag", distTag] : [];
   const provenanceArgs = process.env.NPM_CONFIG_PROVENANCE === "true" ? ["--provenance"] : [];
 
-  if (process.env.CI) {
-    await $`npm install -g npm@11.6.2`;
-  }
-
   await $`npm publish --access public --ignore-scripts ${provenanceArgs} ${tagArgs}`;
 }
 
