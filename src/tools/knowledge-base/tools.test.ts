@@ -98,7 +98,7 @@ describe("knowledge_base tool", () => {
     expect(result).not.toContain("not yet supported")
   })
 
-  test("rejects unsupported source", async () => {
+  test("supports long-term archive source", async () => {
     // #given
     const args = { action: "list" as const, source: "archive" as const }
 
@@ -106,7 +106,7 @@ describe("knowledge_base tool", () => {
     const result = await knowledge_base.execute(args, mockContext)
 
     // #then
-    expect(result).toContain('Source "archive" is not yet supported')
+    expect(result).toBe("No archived entries found.")
   })
 
   test("rejects knowledge source", async () => {

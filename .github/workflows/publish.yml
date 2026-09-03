@@ -105,7 +105,7 @@ jobs:
       - name: Build
         run: |
           echo "=== Running bun build (main) ==="
-          bun build src/index.ts src/google-auth.ts --outdir dist --target bun --format esm --external @ast-grep/napi
+          bun build src/index.ts src/google-auth.ts src/memory-system.ts --outdir dist --target bun --format esm --external @ast-grep/napi
           echo "=== Running bun build (CLI) ==="
           bun build src/cli/index.ts --outdir dist/cli --target bun --format esm
           echo "=== Running tsc ==="
@@ -120,6 +120,7 @@ jobs:
           echo "=== dist/cli/ contents ==="
           ls -la dist/cli/
           test -f dist/index.js || (echo "ERROR: dist/index.js not found!" && exit 1)
+          test -f dist/memory-system.js || (echo "ERROR: dist/memory-system.js not found!" && exit 1)
           test -f dist/cli/index.js || (echo "ERROR: dist/cli/index.js not found!" && exit 1)
 
       - name: Publish
@@ -131,16 +132,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
-
-      - name: Delete draft release
-        run: gh release delete next --yes 2>/dev/null || echo "No draft release to delete"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Merge to master
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION=$(jq -r '.version' package.json)
-          git checkout -B master "v${VERSION}"
-          git push -f origin master

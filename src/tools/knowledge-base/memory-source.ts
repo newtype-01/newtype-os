@@ -1,175 +1,86 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import { MEMORY_DIR } from "../../hooks/memory-system/constants"
-import { parseDailyLogSessions, getFullTranscriptPath } from "../../hooks/memory-system/storage"
+import { createMemoryPaths } from "../../hooks/memory-system/paths"
+import { getFullTranscriptPath, parseDailyLogSessions } from "../../hooks/memory-system/storage"
+import { recallTokens } from "../../hooks/memory-system/recall"
 import type { MemoryListEntry, MemorySearchResult } from "./types"
-import {
-  formatMemoryList,
-  formatMemorySearchResults,
-  extractSnippet,
-  extractSummaryLine,
-} from "./utils"
+import { extractSnippet, extractSummaryLine, formatMemoryList, formatMemorySearchResults } from "./utils"
 
-export function listMemoryEntries(projectDir: string, limit?: number): string {
-  const memoryDir = join(projectDir, MEMORY_DIR)
-
-  if (!existsSync(memoryDir)) {
-    return "No memory entries found."
-  }
-
-  const files = readdirSync(memoryDir)
-    .filter((f) => f.endsWith(".md") && f !== "full")
+function dateFiles(project: string) {
+  const memory = createMemoryPaths(project).memory
+  if (!existsSync(memory)) return []
+  return readdirSync(memory)
+    .filter((file) => /^\d{4}-\d{2}-\d{2}\.md$/.test(file))
     .sort()
     .reverse()
+    .map((file) => ({ file: join(memory, file), date: file.replace(/\.md$/, "") }))
+}
 
+export function listMemoryEntries(project: string, limit?: number): string {
+  const seen = new Set<string>()
   const entries: MemoryListEntry[] = []
-  const effectiveLimit = limit ?? 20
-
-  for (const file of files) {
-    if (entries.length >= effectiveLimit) break
-
-    const filePath = join(memoryDir, file)
-    const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})\.md$/)
-    if (!dateMatch) continue
-
-    const date = dateMatch[1]
-
-    try {
-      const content = readFileSync(filePath, "utf-8")
-      const sessions = parseDailyLogSessions(content)
-
-      for (const session of sessions) {
-        if (entries.length >= effectiveLimit) break
-
-        entries.push({
-          date,
-          sessionID: session.sessionID,
-          tags: session.tags,
-          decisionsCount: session.decisions.length,
-          todosCount: session.todos.length,
-          summaryLine: extractSummaryLine(session.raw),
-        })
-      }
-    } catch {
-      continue
+  for (const item of dateFiles(project)) {
+    for (const session of parseDailyLogSessions(readFileSync(item.file, "utf-8"))) {
+      if (entries.length >= (limit ?? 20)) break
+      if (session.sessionID && seen.has(session.sessionID)) continue
+      if (session.sessionID) seen.add(session.sessionID)
+      entries.push({
+        date: item.date,
+        sessionID: session.sessionID,
+        tags: session.tags,
+        decisionsCount: session.decisions.length,
+        todosCount: session.todos.length,
+        summaryLine: extractSummaryLine(session.raw),
+      })
     }
   }
-
   return formatMemoryList(entries)
 }
 
-export function searchMemoryEntries(
-  projectDir: string,
-  query: string,
-  limit?: number
-): string {
-  const memoryDir = join(projectDir, MEMORY_DIR)
-
-  if (!existsSync(memoryDir)) {
-    return `No matches found for "${query}".`
-  }
-
-  const files = readdirSync(memoryDir)
-    .filter((f) => f.endsWith(".md") && f !== "full")
-    .sort()
-    .reverse()
-
-  const results: MemorySearchResult[] = []
-  const effectiveLimit = limit ?? 10
-  const lowerQuery = query.toLowerCase()
-
-  for (const file of files) {
-    if (results.length >= effectiveLimit) break
-
-    const filePath = join(memoryDir, file)
-    const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})\.md$/)
-    if (!dateMatch) continue
-
-    const date = dateMatch[1]
-
-    try {
-      const content = readFileSync(filePath, "utf-8")
-      const sessions = parseDailyLogSessions(content)
-
-      for (const session of sessions) {
-        if (results.length >= effectiveLimit) break
-
-        const lowerRaw = session.raw.toLowerCase()
-        if (!lowerRaw.includes(lowerQuery)) continue
-
-        const matches = lowerRaw.split(lowerQuery).length - 1
-
-        results.push({
-          date,
-          sessionID: session.sessionID,
-          tags: session.tags,
-          snippet: extractSnippet(session.raw, query),
-          matchCount: matches,
-        })
-      }
-    } catch {
-      continue
+export function searchMemoryEntries(project: string, query: string, limit?: number): string {
+  const keywords = recallTokens(query)
+  const seen = new Set<string>()
+  const results: Array<MemorySearchResult & { score: number }> = []
+  for (const item of dateFiles(project)) {
+    for (const session of parseDailyLogSessions(readFileSync(item.file, "utf-8"))) {
+      if (session.sessionID && seen.has(session.sessionID)) continue
+      if (session.sessionID) seen.add(session.sessionID)
+      const lower = session.raw.toLowerCase()
+      const topic = extractSummaryLine(session.raw).toLowerCase()
+      const score = keywords.reduce((total, keyword) =>
+        total + Number(lower.includes(keyword)) + Number(topic.includes(keyword)) * 2 + Number(session.tags.some((tag) => tag.toLowerCase().includes(keyword))), 0)
+      if (keywords.length && !score) continue
+      results.push({
+        date: item.date,
+        sessionID: session.sessionID,
+        tags: session.tags,
+        snippet: extractSnippet(session.raw, query),
+        matchCount: score || 1,
+        score,
+      })
     }
   }
-
-  return formatMemorySearchResults(results, query)
+  results.sort((left, right) => right.score - left.score)
+  return formatMemorySearchResults(results.slice(0, limit ?? 10), query)
 }
 
-export function getMemoryEntry(
-  projectDir: string,
-  id: string,
-  includeFull?: boolean
-): string {
+export function getMemoryEntry(project: string, id: string, includeFull?: boolean): string {
   const parts = id.split("/")
   const date = parts[0]
   const sessionID = parts[1]
-
-  const dateMatch = date.match(/^\d{4}-\d{2}-\d{2}$/)
-  if (!dateMatch) {
-    return `Invalid id format: ${id}. Expected YYYY-MM-DD or YYYY-MM-DD/sessionID`
-  }
-
-  const memoryDir = join(projectDir, MEMORY_DIR)
-  const filePath = join(memoryDir, `${date}.md`)
-
-  if (!existsSync(filePath)) {
-    return `Memory entry not found: ${id}`
-  }
-
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return `Invalid id format: ${id}. Expected YYYY-MM-DD or YYYY-MM-DD/sessionID`
+  const file = join(createMemoryPaths(project).memory, `${date}.md`)
+  if (!existsSync(file)) return `Memory entry not found: ${id}`
   try {
-    const content = readFileSync(filePath, "utf-8")
-    const sessions = parseDailyLogSessions(content)
-
-    if (!sessionID) {
-      const output = sessions.map((s) => s.raw).join("\n\n---\n\n")
-      return output || `Memory entry not found: ${id}`
-    }
-
-    const session = sessions.find(
-      (s) => s.sessionID === sessionID || s.sessionID?.startsWith(sessionID)
-    )
-
-    if (!session) {
-      return `Memory entry not found: ${id}`
-    }
-
-    let output = session.raw
-
-    if (includeFull && session.sessionID) {
-      const fullPath = getFullTranscriptPath(projectDir, session.sessionID)
-      if (existsSync(fullPath)) {
-        try {
-          const fullContent = readFileSync(fullPath, "utf-8")
-          output += "\n\n---\n\n## Full Transcript\n\n" + fullContent
-        } catch {
-          output += "\n\n_(Full transcript could not be read)_"
-        }
-      } else {
-        output += "\n\n_(Full transcript not available)_"
-      }
-    }
-
-    return output
+    const sessions = parseDailyLogSessions(readFileSync(file, "utf-8"))
+    if (!sessionID) return sessions.map((session) => session.raw).join("\n\n---\n\n") || `Memory entry not found: ${id}`
+    const session = sessions.find((item) => item.sessionID === sessionID || item.sessionID?.startsWith(sessionID))
+    if (!session) return `Memory entry not found: ${id}`
+    if (!includeFull || !session.sessionID) return session.raw
+    const full = getFullTranscriptPath(project, session.sessionID)
+    return existsSync(full)
+      ? `${session.raw}\n\n---\n\n## Full Transcript\n\n${readFileSync(full, "utf-8")}`
+      : `${session.raw}\n\n_(Full transcript not available)_`
   } catch (error) {
     return `Error reading memory entry: ${error instanceof Error ? error.message : String(error)}`
   }

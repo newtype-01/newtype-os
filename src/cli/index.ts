@@ -9,6 +9,8 @@ import type { InstallArgs } from "./types"
 import type { RunOptions } from "./run"
 import type { GetLocalVersionOptions } from "./get-local-version/types"
 import type { DoctorOptions } from "./doctor"
+import { resolve } from "node:path"
+import { auditMemory } from "../memory-system"
 
 const packageJson = await import("../../package.json")
 const VERSION = packageJson.version
@@ -172,6 +174,25 @@ Note:
   .action(async (indexOrEmail: string) => {
     const exitCode = await removeAccount(indexOrEmail)
     process.exit(exitCode)
+  })
+
+const memoryCommand = program.command("memory").description("Inspect external plugin memory")
+
+memoryCommand
+  .command("audit")
+  .description("Check or repair .opencode memory without accessing .newtype")
+  .option("-d, --directory <path>", "Project directory", process.cwd())
+  .option("--apply", "Repair duplicates, links, and the .opencode memory index")
+  .option("--json", "Output results in JSON format")
+  .action((options) => {
+    const report = auditMemory(resolve(options.directory), { rootName: ".opencode", apply: options.apply ?? false })
+    if (options.json) {
+      console.log(JSON.stringify({ version: 1, data: report }, null, 2))
+      return
+    }
+    console.log(
+      `Memory audit: ${report.sessions} sessions, ${report.transcripts} transcripts, ${report.duplicate_sessions.length} duplicates, ${report.broken_links.length} broken links, ${report.missing_transcripts.length} missing transcripts${options.apply ? `, ${report.repaired} repaired` : ""}.`,
+    )
   })
 
 program

@@ -13,5 +13,5 @@ Three actions, from lightweight to detailed:
 3. get — Retrieve full content of a specific memory entry
    knowledge_base({ action: "get", id: "2026-02-20/ses_abc123" })
 
-Sources: "memory" (default, conversation memories), "archive" (long-term MEMORY.md), "knowledge" (KNOWLEDGE.md)
-Only "memory" source is currently supported.`
+Sources: "memory" (default, conversation memories) and "archive" (MEMORY.md plus rotations).
+The standalone plugin reads only the current project's .opencode namespace.`

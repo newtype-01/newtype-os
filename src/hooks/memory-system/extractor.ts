@@ -150,6 +150,41 @@ export function generateSummaryPrompt(transcript: string): string {
 ${transcript}`
 }
 
+const CHATTER_LINE_PATTERNS = [
+  /^(好的|收到|明白|了解)[，,。！!]?/,
+  /^好[，,][^\n]{0,20}$/,
+  /^(以下是|这是|已生成|正在生成)[^\n]{0,40}[:：。]?$/,
+  /^记忆库中已有[^\n]*$/,
+  /^here('s| is| are)\b[^\n]{0,40}$/i,
+  /^(sure|okay|ok)[,.!]?\s/i,
+]
+
+export function sanitizeArchivistOutput(text: string): string {
+  const lines = text
+    .replace(/\*\*QUALITY SCORES:\*\*[\s\S]*?\*\*OVERALL:[^\n]*\n?(\*\*WEAKEST:[^\n]*\n?)?/g, "")
+    .replace(/\*\*ARTIFACTS:\*\*\s*```[\s\S]*?(```|$)/g, "")
+    .split("\n")
+  const start = lines.findIndex((line) => {
+    const trimmed = line.trim()
+    return trimmed !== "" && trimmed !== "---" && !CHATTER_LINE_PATTERNS.some((pattern) => pattern.test(trimmed))
+  })
+  if (start === -1) return ""
+  return lines
+    .slice(start)
+    .join("\n")
+    .replace(/(\n-{3,}\s*)+$/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+export function looksLikeTranscript(text: string): boolean {
+  if (/^# Full Transcript/m.test(text)) return true
+  const roleHeadings = text.match(/^##\s+(USER|ASSISTANT|SYSTEM)\b/gm)
+  if (roleHeadings && roleHeadings.length >= 2) return true
+  const toolUses = text.match(/^\(tool use\)/gm)
+  return Boolean(toolUses && toolUses.length >= 3)
+}
+
 /** Parse LLM-generated summary into MemoryEntry structure */
 export function parseLLMSummary(
   sessionID: string,
@@ -159,7 +194,8 @@ export function parseLLMSummary(
     return null
   }
 
-  const summary = llmOutput.trim()
+  const summary = sanitizeArchivistOutput(llmOutput)
+  if (!summary || looksLikeTranscript(summary)) return null
 
   // Extract tags from the summary
   const tags: string[] = []

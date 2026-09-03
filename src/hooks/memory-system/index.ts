@@ -1,27 +1,25 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { HOOK_NAME, SAVE_GRACE_PERIOD_MS } from "./constants"
+import { HOOK_NAME } from "./constants"
 import {
   appendMemoryEntry,
-  hasMemoryForSession,
-  checkArchiveNeeded,
   archiveOldMemories,
+  checkArchiveNeeded,
+  hasMemoryForSession,
+  rebuildMemoryIndex,
   saveFullTranscript,
+  storedTranscriptHash,
+  transcriptHash,
 } from "./storage"
 import {
-  prepareMessagesForSummary,
+  extractSessionSummaryFallback,
   formatTranscriptForLLM,
   generateSummaryPrompt,
   parseLLMSummary,
-  extractSessionSummaryFallback,
+  prepareMessagesForSummary,
   stripSystemInstructionPrefix,
 } from "./extractor"
 import { log } from "../../shared/logger"
-import { getMainSessionID, subagentSessions } from "../../features/claude-code-session-state"
-
-interface SessionState {
-  saved: boolean
-  saveTimer?: ReturnType<typeof setTimeout>
-}
+import { subagentSessions } from "../../features/claude-code-session-state"
 
 interface MessagePart {
   type: string
@@ -45,299 +43,188 @@ interface FullTranscriptMessage {
   timestamp?: string
 }
 
+interface SessionState {
+  saving?: Promise<void>
+}
+
+const ROOT_NAME = ".opencode"
+const ARCHIVE_CHECK_COOLDOWN_MS = 60 * 60 * 1000
+
 function extractMessageText(parts: MessagePart[]): string {
-  return parts
-    .filter((p) => p.type === "text" && p.text)
-    .map((p) => p.text!)
-    .join("\n")
+  return parts.filter((part) => part.type === "text" && part.text).map((part) => part.text!).join("\n")
 }
 
 function extractFullTranscript(messages: MessageWrapper[]): FullTranscriptMessage[] {
   return messages
-    .map((message) => {
-      let text = extractMessageText(message.parts)
-      
-      if (message.info.role === "user") {
-        text = stripSystemInstructionPrefix(text)
-      }
-      
-      return {
-        role: message.info.role,
-        text,
-      }
-    })
+    .map((message) => ({
+      role: message.info.role,
+      text: message.info.role === "user"
+        ? stripSystemInstructionPrefix(extractMessageText(message.parts))
+        : extractMessageText(message.parts),
+    }))
     .filter((message) => message.text.trim().length > 0)
 }
 
-interface ArchiveState {
-  inProgress: boolean
-  lastCheck: number
-}
-
-const ARCHIVE_CHECK_COOLDOWN_MS = 60 * 60 * 1000
-
 export function createMemorySystemHook(ctx: PluginInput) {
+  const storage = { rootName: ROOT_NAME }
   const sessionStates = new Map<string, SessionState>()
-  const archiveState: ArchiveState = { inProgress: false, lastCheck: 0 }
+  const rootSessions = new Set<string>()
+  const childSessions = new Set<string>()
+  const localWrites = new Set<Promise<void>>()
+  const enrichment = new Set<Promise<void>>()
+  const archiveState = { inProgress: false, lastCheck: 0 }
 
-  async function runArchivistSummary(prompt: string): Promise<string | null> {
+  function state(sessionID: string) {
+    const existing = sessionStates.get(sessionID)
+    if (existing) return existing
+    const created: SessionState = {}
+    sessionStates.set(sessionID, created)
+    return created
+  }
+
+  function track<T>(set: Set<Promise<void>>, promise: Promise<T>): Promise<void> {
+    const tracked = promise.then(
+      () => undefined,
+      (error) => log(`[${HOOK_NAME}] Background memory task failed`, { error: String(error) }),
+    )
+    set.add(tracked)
+    void tracked.then(() => set.delete(tracked))
+    return tracked
+  }
+
+  async function runArchivistSummary(prompt: string, parentID?: string): Promise<string | null> {
     try {
-      const createResult = await ctx.client.session.create({
-        body: {
-          title: "Memory: Deep Summary",
-        },
+      const result = await ctx.client.session.create({
+        body: { title: "Memory: Deep Summary", ...(parentID ? { parentID } : {}) },
       })
-
-      if (createResult.error) return null
-
-      const sessionID = createResult.data.id
+      if (result.error) return null
+      const sessionID = result.data.id
       subagentSessions.add(sessionID)
-
+      childSessions.add(sessionID)
       await ctx.client.session.prompt({
         path: { id: sessionID },
-        body: {
-          agent: "archivist",
-          parts: [{ type: "text", text: prompt }],
-        },
+        body: { agent: "archivist", parts: [{ type: "text", text: prompt }] },
       })
-
-      const messagesResult = await ctx.client.session.messages({
-        path: { id: sessionID },
-      })
-      const messages = ((messagesResult as { data?: unknown }).data ?? messagesResult) as MessageWrapper[]
-      const assistantMessages = messages.filter((m) => m.info.role === "assistant")
-      const last = assistantMessages[assistantMessages.length - 1]
-
-      const text = last?.parts
-        .filter((p) => p.type === "text" && p.text)
-        .map((p) => p.text)
+      const response = await ctx.client.session.messages({ path: { id: sessionID } })
+      const messages = ((response as { data?: unknown }).data ?? response) as MessageWrapper[]
+      return messages
+        .filter((message) => message.info.role === "assistant")
+        .at(-1)
+        ?.parts.filter((part) => part.type === "text" && part.text)
+        .map((part) => part.text)
         .join("\n")
-        .trim()
-
-      return text || null
+        .trim() || null
     } catch {
       return null
     }
   }
 
-  function getOrCreateState(sessionID: string): SessionState {
-    let state = sessionStates.get(sessionID)
-    if (!state) {
-      state = { saved: false }
-      sessionStates.set(sessionID, state)
-    }
-    return state
+  async function enrichSummary(sessionID: string, expectedHash: string, messages: MessageWrapper[]) {
+    const prepared = prepareMessagesForSummary(messages)
+    if (!prepared.length) return
+    const summary = await runArchivistSummary(generateSummaryPrompt(formatTranscriptForLLM(prepared)), sessionID)
+    if (!summary || storedTranscriptHash(ctx.directory, sessionID, storage) !== expectedHash) return
+    const entry = parseLLMSummary(sessionID, summary)
+    if (!entry) return
+    appendMemoryEntry(ctx.directory, entry, { ...storage, summaryKind: "llm" })
+    log(`[${HOOK_NAME}] LLM summary enriched`, { sessionID })
   }
 
-  function cancelPendingSave(sessionID: string): void {
-    const state = sessionStates.get(sessionID)
-    if (state?.saveTimer) {
-      clearTimeout(state.saveTimer)
-      state.saveTimer = undefined
-    }
-  }
-
-  function cleanup(sessionID: string): void {
-    cancelPendingSave(sessionID)
-    sessionStates.delete(sessionID)
-  }
-
-  async function checkAndArchive(): Promise<void> {
-    if (archiveState.inProgress) return
-    
+  async function checkAndArchive() {
     const now = Date.now()
-    if (now - archiveState.lastCheck < ARCHIVE_CHECK_COOLDOWN_MS) return
-    
+    if (archiveState.inProgress || now - archiveState.lastCheck < ARCHIVE_CHECK_COOLDOWN_MS) return
     archiveState.lastCheck = now
-
-    const checkResult = checkArchiveNeeded(ctx.directory)
-    if (!checkResult.needsArchive) return
-
+    const check = checkArchiveNeeded(ctx.directory, undefined, storage)
+    if (!check.needsArchive) return
     archiveState.inProgress = true
-
-    await ctx.client.tui
-      .showToast({
-        body: {
-          title: "Memory Consolidation",
-          message: `Archiving ${checkResult.archived.length} old memory logs...`,
-          variant: "warning",
-          duration: 3000,
-        },
-      })
-      .catch(() => {})
-
-    log(`[${HOOK_NAME}] Auto-archiving old memories`, {
-      files: checkResult.archived,
-      count: checkResult.archived.length,
-    })
-
     try {
-      const result = await archiveOldMemories(ctx.directory, {
-        deepSummarizer: async (session, fullContent) => {
-          const prompt = `Summarize the full transcript into long-term memory entries.\n\nRules:\n- Output Markdown only.\n- Use sections only when relevant.\n- Keep each bullet concise (<120 chars).\n- Do NOT include sensitive data or raw conversation.\n- If nothing important, return "".\n\nRequired sections (only if non-empty):\n**User Preferences:**\n- ...\n**Decisions Made:**\n- ...\n**Lessons Learned:**\n- ...\n\nTranscript:\n${fullContent}`
-
-          try {
-            return await runArchivistSummary(prompt)
-          } catch {
-            return null
-          }
-        },
+      await archiveOldMemories(ctx.directory, {
+        ...storage,
+        deepSummarizer: (session, fullContent) => runArchivistSummary([
+          "Summarize the full transcript into long-term memory entries.",
+          "Output concise Markdown sections for preferences, decisions, and lessons only.",
+          "Do not include sensitive data or raw conversation.",
+          `Transcript:\n${fullContent}`,
+        ].join("\n\n"), session.sessionID),
       })
-
-      await ctx.client.tui
-        .showToast({
-          body: {
-            title: "Memory Archived",
-            message: `${result.archived.length} logs consolidated to MEMORY.md`,
-            variant: "success",
-            duration: 2000,
-          },
-        })
-        .catch(() => {})
-
-      log(`[${HOOK_NAME}] Archive complete`, {
-        archived: result.archived.length,
-        remaining: result.totalFiles,
-      })
-    } catch (err) {
-      log(`[${HOOK_NAME}] Archive failed`, { error: String(err) })
+      log(`[${HOOK_NAME}] Archive complete`, { count: check.archived.length })
+    } catch (error) {
+      log(`[${HOOK_NAME}] Archive failed`, { error: String(error) })
     } finally {
       archiveState.inProgress = false
     }
   }
 
-  async function saveSessionMemory(sessionID: string): Promise<void> {
-    const state = getOrCreateState(sessionID)
-
-    if (state.saved) {
-      log(`[${HOOK_NAME}] Already saved`, { sessionID })
-      return
-    }
-
-    if (hasMemoryForSession(ctx.directory, sessionID)) {
-      state.saved = true
-      log(`[${HOOK_NAME}] Already has memory entry`, { sessionID })
-      return
-    }
-
-    try {
-      const resp = await ctx.client.session.messages({
+  async function persistSession(sessionID: string) {
+    const current = state(sessionID)
+    if (current.saving) return current.saving
+    const saving = (async () => {
+      const response = await ctx.client.session.messages({
         path: { id: sessionID },
         query: { directory: ctx.directory },
       })
-
-      const messages = (resp.data ?? resp) as MessageWrapper[]
-      const fullTranscript = extractFullTranscript(messages)
-      const fullSuccess = saveFullTranscript(ctx.directory, sessionID, fullTranscript)
-
-      const preparedMessages = prepareMessagesForSummary(messages)
-
-      if (preparedMessages.length === 0) {
-        log(`[${HOOK_NAME}] No meaningful content after filtering`, { sessionID })
-        state.saved = true
-        return
-      }
-
-      const transcript = formatTranscriptForLLM(preparedMessages)
-      const summaryPrompt = generateSummaryPrompt(transcript)
-
-      let entry = null
-      const llmSummary = await runArchivistSummary(summaryPrompt)
-
-      if (llmSummary) {
-        entry = parseLLMSummary(sessionID, llmSummary)
-        if (entry) {
-          log(`[${HOOK_NAME}] LLM summary generated`, { sessionID })
-        }
-      }
-
-      if (!entry) {
-        log(`[${HOOK_NAME}] Using fallback extraction`, { sessionID })
-        entry = extractSessionSummaryFallback(sessionID, messages)
-      }
-
-      const success = appendMemoryEntry(ctx.directory, entry)
-
-      if (success && fullSuccess) {
-        state.saved = true
-        log(`[${HOOK_NAME}] Memory saved`, {
-          sessionID,
-          messageCount: messages.length,
-          keyPoints: entry.keyPoints.length,
-          usedLLM: llmSummary !== null,
-        })
-
-        await checkAndArchive()
-      } else {
-        log(`[${HOOK_NAME}] Failed to save memory`, {
-          sessionID,
-          summarySaved: success,
-          fullSaved: fullSuccess,
-        })
-      }
-    } catch (err) {
-      log(`[${HOOK_NAME}] Error saving memory`, { sessionID, error: String(err) })
-    }
+      const messages = (response.data ?? response) as MessageWrapper[]
+      const transcript = extractFullTranscript(messages)
+      if (!transcript.length) return
+      const contentHash = transcriptHash(transcript)
+      if (storedTranscriptHash(ctx.directory, sessionID, storage) === contentHash && hasMemoryForSession(ctx.directory, sessionID, storage)) return
+      const fullSaved = saveFullTranscript(ctx.directory, sessionID, transcript, storage)
+      const entry = extractSessionSummaryFallback(sessionID, messages)
+      const summarySaved = appendMemoryEntry(ctx.directory, entry, { ...storage, summaryKind: "fallback" })
+      if (!fullSaved || !summarySaved) throw new Error(`Could not persist ${sessionID}`)
+      log(`[${HOOK_NAME}] Memory checkpoint saved`, { sessionID, messages: messages.length })
+      track(enrichment, enrichSummary(sessionID, contentHash, messages))
+      track(enrichment, checkAndArchive())
+    })().catch((error) => log(`[${HOOK_NAME}] Error saving memory`, { sessionID, error: String(error) }))
+    current.saving = track(localWrites, saving).finally(() => {
+      if (state(sessionID).saving === current.saving) current.saving = undefined
+    })
+    return current.saving
   }
 
-  function scheduleSave(sessionID: string): void {
-    const state = getOrCreateState(sessionID)
-
-    cancelPendingSave(sessionID)
-
-    state.saveTimer = setTimeout(() => {
-      state.saveTimer = undefined
-      saveSessionMemory(sessionID)
-    }, SAVE_GRACE_PERIOD_MS)
-
-    log(`[${HOOK_NAME}] Save scheduled`, { sessionID, delayMs: SAVE_GRACE_PERIOD_MS })
+  async function isRootSession(sessionID: string) {
+    if (childSessions.has(sessionID) || subagentSessions.has(sessionID)) return false
+    if (rootSessions.has(sessionID)) return true
+    const response = await ctx.client.session.get({
+      path: { id: sessionID },
+      query: { directory: ctx.directory },
+    }).catch(() => undefined)
+    const info = response?.data as { parentID?: string } | undefined
+    if (info?.parentID) {
+      childSessions.add(sessionID)
+      return false
+    }
+    rootSessions.add(sessionID)
+    return true
   }
 
   return {
     event: async ({ event }: { event: { type: string; properties?: unknown } }) => {
       const props = event.properties as Record<string, unknown> | undefined
-
+      if (event.type === "session.created") {
+        const info = props?.info as { id?: string; parentID?: string } | undefined
+        if (!info?.id) return
+        if (info.parentID) childSessions.add(info.id)
+        else rootSessions.add(info.id)
+        return
+      }
       if (event.type === "session.idle") {
         const sessionID = props?.sessionID as string | undefined
-        if (!sessionID) return
-
-        const mainSessionID = getMainSessionID()
-        const isMainSession = sessionID === mainSessionID
-        const isSubagent = subagentSessions.has(sessionID)
-
-        if (isSubagent) {
-          log(`[${HOOK_NAME}] Skipping subagent session`, { sessionID })
-          return
-        }
-
-        if (mainSessionID && !isMainSession) {
-          log(`[${HOOK_NAME}] Skipping non-main session`, { sessionID, mainSessionID })
-          return
-        }
-
-        scheduleSave(sessionID)
+        if (sessionID && await isRootSession(sessionID)) await persistSession(sessionID)
+        return
       }
-
-      if (event.type === "message.updated") {
-        const info = props?.info as MessageInfo | undefined
-        const sessionID = info?.sessionID
-        if (sessionID) {
-          cancelPendingSave(sessionID)
-        }
-      }
-
-      if (event.type === "session.deleted") {
-        const sessionInfo = props?.info as { id?: string } | undefined
-        if (sessionInfo?.id) {
-          const state = sessionStates.get(sessionInfo.id)
-          if (state && !state.saved) {
-            cancelPendingSave(sessionInfo.id)
-            await saveSessionMemory(sessionInfo.id)
-          }
-          cleanup(sessionInfo.id)
-          log(`[${HOOK_NAME}] Session deleted, cleaned up`, { sessionID: sessionInfo.id })
-        }
-      }
+      if (event.type !== "session.deleted") return
+      const sessionID = (props?.info as { id?: string } | undefined)?.id
+      if (!sessionID) return
+      const current = sessionStates.get(sessionID)
+      if (current?.saving) await current.saving
+      sessionStates.delete(sessionID)
+      rootSessions.delete(sessionID)
+      childSessions.delete(sessionID)
+    },
+    dispose: async () => {
+      await Promise.allSettled(localWrites)
+      enrichment.clear()
     },
   }
 }

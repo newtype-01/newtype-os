@@ -75,6 +75,7 @@ import { log, detectExternalNotificationPlugin, getNotificationConflictWarning, 
 import { loadPluginConfig } from "./plugin-config";
 import { createModelCacheState, getModelLimit } from "./plugin-state";
 import { createConfigHandler } from "./plugin-handlers";
+import { getLongTermMemoryContext, getRecentMemoryContext } from "./hooks/memory-system/recall";
 
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   // Start background tmux check immediately
@@ -357,22 +358,40 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     },
 
     "chat.message": async (input, output) => {
+      const promptText = (
+        output as { parts?: Array<{ type: string; text?: string }> }
+      ).parts
+        ?.filter((part) => part.type === "text" && part.text)
+        .map((part) => part.text)
+        .join("\n")
+        .trim() || "";
+
       await claudeCodeHooks["chat.message"]?.(input, output);
       await keywordDetector?.["chat.message"]?.(input, output);
+      if (isHookEnabled("memory-system")) {
+        const recent = getRecentMemoryContext(ctx.directory, promptText);
+        if (recent) {
+          contextCollector.register(input.sessionID, {
+            id: "memory-recall",
+            source: "memory-system",
+            content: recent,
+            priority: "low",
+          });
+        }
+        const longTerm = getLongTermMemoryContext(ctx.directory, promptText);
+        if (longTerm) {
+          contextCollector.register(input.sessionID, {
+            id: "memory-longterm",
+            source: "memory-system",
+            content: longTerm,
+            priority: "low",
+          });
+        }
+      }
       await contextInjector["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {
-        const parts = (
-          output as { parts?: Array<{ type: string; text?: string }> }
-        ).parts;
-        const promptText =
-          parts
-            ?.filter((p) => p.type === "text" && p.text)
-            .map((p) => p.text)
-            .join("\n")
-            .trim() || "";
-
         const isRalphLoopTemplate =
           promptText.includes("You are starting a Ralph Loop") &&
           promptText.includes("<user-task>");
@@ -458,7 +477,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       interactiveBashSession?.event(input);
       ralphLoop?.event(input);
       chiefOrchestrator?.handler(input);
-      memorySystem?.event(input);
+      await memorySystem?.event(input);
       workbenchCheckpoint?.event(input);
       startupConfigChecker?.event(input);
 
@@ -509,6 +528,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
           }
         }
       }
+    },
+
+    dispose: async () => {
+      await memorySystem?.dispose();
     },
 
     "tool.execute.before": async (input, output) => {

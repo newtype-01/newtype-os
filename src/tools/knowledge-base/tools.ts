@@ -1,6 +1,7 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import { TOOL_DESCRIPTION } from "./constants"
 import { listMemoryEntries, searchMemoryEntries, getMemoryEntry } from "./memory-source"
+import { getArchiveEntry, listArchiveEntries, searchArchiveEntries } from "./archive-source"
 import type { KnowledgeBaseArgs } from "./types"
 
 export const knowledge_base: ToolDefinition = tool({
@@ -18,8 +19,23 @@ export const knowledge_base: ToolDefinition = tool({
       const source = args.source ?? "memory"
       const projectDir = process.cwd()
 
+      if (source === "archive") {
+        switch (args.action) {
+          case "list":
+            return listArchiveEntries(projectDir, args.limit)
+          case "search":
+            if (!args.query) return "Error: query is required for search action"
+            return searchArchiveEntries(projectDir, args.query, args.limit)
+          case "get":
+            if (!args.id) return "Error: id is required for get action"
+            return getArchiveEntry(projectDir, args.id)
+          default:
+            return `Unknown action: ${args.action}. Available: list, search, get`
+        }
+      }
+
       if (source !== "memory") {
-        return `Source "${source}" is not yet supported. Currently available: memory`
+        return `Source "${source}" is not yet supported. Currently available: memory, archive`
       }
 
       switch (args.action) {
