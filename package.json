@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "newtype-profile": "./dist/cli/index.js"
+    "newtype-profile": "dist/cli/index.js"
   },
   "files": [
     "dist"
