@@ -102,6 +102,13 @@ jobs:
           echo "=== package.json scripts ==="
           cat package.json | jq '.scripts'
 
+      - name: Prepare package version
+        run: bun run script/publish.ts
+        env:
+          BUMP: ${{ inputs.bump }}
+          VERSION: ${{ inputs.version }}
+          PREPARE_ONLY: true
+
       - name: Build
         run: |
           echo "=== Running bun build (main) ==="
@@ -122,6 +129,7 @@ jobs:
           test -f dist/index.js || (echo "ERROR: dist/index.js not found!" && exit 1)
           test -f dist/memory-system.js || (echo "ERROR: dist/memory-system.js not found!" && exit 1)
           test -f dist/cli/index.js || (echo "ERROR: dist/cli/index.js not found!" && exit 1)
+          test "$(bun dist/cli/index.js --version)" = "$(jq -r '.version' package.json)" || (echo "ERROR: CLI version does not match package.json" && exit 1)
 
       - name: Publish
         run: bun run script/publish.ts

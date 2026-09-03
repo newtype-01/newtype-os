@@ -5,6 +5,7 @@ import { $ } from "bun";
 const PACKAGE_NAME = "@newtype-os/plugin";
 const bump = process.env.BUMP as "major" | "minor" | "patch" | undefined;
 const versionOverride = process.env.VERSION;
+const prepareOnly = process.env.PREPARE_ONLY === "true";
 
 console.log("=== Publishing @newtype-os/plugin ===\n");
 
@@ -200,6 +201,10 @@ async function main() {
   }
 
   await updatePackageVersion(newVersion);
+  if (prepareOnly) {
+    console.log(`Prepared ${PACKAGE_NAME}@${newVersion} for build`);
+    return;
+  }
   const changelog = await generateChangelog(previous);
   const contributors = await getContributors(previous);
   const notes = [...changelog, ...contributors];
