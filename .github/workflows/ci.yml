@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, dev]
+    branches: [main, dev]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -73,7 +73,7 @@ jobs:
           test -f dist/index.d.ts || (echo "ERROR: dist/index.d.ts not found!" && exit 1)
 
       - name: Auto-commit schema changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           if git diff --quiet assets/oh-my-opencode.schema.json; then
             echo "No schema changes to commit"
