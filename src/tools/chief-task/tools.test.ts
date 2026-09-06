@@ -132,6 +132,7 @@ describe("chief-task", () => {
       // #given
       const { createChiefTask } = require("./tools")
       let created = 0
+      let promptMessageID = ""
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
         session: {
@@ -139,12 +140,15 @@ describe("chief-task", () => {
             created++
             return { data: { id: `session-${created}` } }
           },
-          promptAsync: async () => ({ data: {} }),
+          promptAsync: async ({ body }: { body: { messageID: string } }) => {
+            promptMessageID = body.messageID
+            return { data: {} }
+          },
           status: async () => ({ data: {} }),
           messages: async () => ({
             data: [
               {
-                info: { role: "assistant", time: { created: Date.now() } },
+                info: { role: "assistant", parentID: promptMessageID, time: { created: Date.now() } },
                 parts: [{ type: "text", text: "done" }],
               },
             ],
@@ -446,13 +450,33 @@ describe("chief-task", () => {
       launch: async () => mockTask,
     }
     
+    let submittedID = ""
+    let submittedAgent = ""
+    let submittedModel = ""
     const mockClient = {
       session: {
-        prompt: async () => ({ data: {} }),
+        get: async () => ({ data: { id: "parent-session" } }),
+        status: async () => ({ data: {} }),
+        abort: async () => ({ data: true }),
+        promptAsync: async (input: { body: { messageID: string } }) => {
+          submittedID = input.body.messageID
+          submittedAgent = (input.body as { agent?: string }).agent ?? ""
+          submittedModel = (input.body as { model?: { modelID?: string } }).model?.modelID ?? ""
+          return { data: {} }
+        },
         messages: async () => ({
           data: [
             {
-              info: { role: "assistant", time: { created: Date.now() } },
+              info: {
+                role: "user",
+                agent: "researcher",
+                model: { providerID: "openai", modelID: "test-model" },
+                time: { created: 1 },
+              },
+              parts: [{ type: "text", text: "Original task" }],
+            },
+            {
+              info: { role: "assistant", parentID: submittedID, time: { created: Date.now() } },
               parts: [{ type: "text", text: "This is the resumed task result" }],
             },
           ],
@@ -466,6 +490,7 @@ describe("chief-task", () => {
     const tool = createChiefTask({
       manager: mockManager,
       client: mockClient,
+      pollIntervalMs: 1,
     })
     
     const toolContext = {
@@ -490,6 +515,8 @@ describe("chief-task", () => {
     // #then - should contain actual result, not just "Background task resumed"
     expect(result).toContain("This is the resumed task result")
     expect(result).not.toContain("Background task resumed")
+    expect(submittedAgent).toBe("researcher")
+    expect(submittedModel).toBe("test-model")
   })
 
   test("resume with background=true should return immediately without waiting", async () => {
@@ -510,6 +537,8 @@ describe("chief-task", () => {
     
     const mockClient = {
       session: {
+        get: async () => ({ data: { id: "parent-session" } }),
+        status: async () => ({ data: {} }),
         prompt: async () => ({ data: {} }),
         messages: async () => ({
           data: [],

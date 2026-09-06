@@ -21,7 +21,16 @@ export function createTaskResumeInfoHook() {
     output: { title: string; output: string; metadata: unknown }
   ) => {
     if (!TARGET_TOOLS.includes(input.tool)) return
-    if (output.output.startsWith("Error:") || output.output.startsWith("Failed")) return
+    if (
+      output.output.startsWith("Error:")
+      || output.output.startsWith("Failed")
+      || output.output.startsWith("❌")
+      || output.output.startsWith("⏳")
+      || output.output.startsWith("Task cancelled")
+      || output.output.startsWith("Background task launched.")
+      || output.output.startsWith("Background task resumed.")
+      || output.output.includes("(No text output)")
+    ) return
     if (output.output.includes("\nto resume:")) return
 
     const sessionId = extractSessionId(output.output)

@@ -28,6 +28,7 @@ export interface BackgroundTask {
   progress?: TaskProgress
   parentModel?: { providerID: string; modelID: string }
   model?: { providerID: string; modelID: string }
+  skillContent?: string
   /** Agent name used for concurrency tracking */
   concurrencyKey?: string
   /** Parent session's agent name for notification */

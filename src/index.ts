@@ -64,6 +64,7 @@ import {
   discoverCommandsSync,
   sessionExists,
   createChiefTask,
+  createSessionTools,
   interactive_bash,
   startTmuxCheck,
 } from "./tools";
@@ -278,6 +279,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     userCategories: pluginConfig.categories,
     agentModels,
   });
+  const sessionTools = createSessionTools(ctx.client, ctx.directory);
   const disabledSkills = new Set(pluginConfig.disabled_skills ?? []);
   const systemMcpNames = getSystemMcpServerNames();
   const builtinSkills = createBuiltinSkills().filter((skill) => {
@@ -347,6 +349,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
     tool: {
       ...builtinTools,
+      ...sessionTools,
       ...backgroundTools,
       look_at: lookAt,
       chief_task: chiefTask,

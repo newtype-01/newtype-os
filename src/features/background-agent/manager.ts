@@ -100,6 +100,7 @@ export class BackgroundManager {
       parentModel: input.parentModel,
       parentAgent: input.parentAgent,
       model: input.model,
+      skillContent: input.skillContent,
       concurrencyKey,
     }
 
@@ -229,6 +230,9 @@ export class BackgroundManager {
     if (!existingTask) {
       throw new Error(`Task not found for session: ${input.sessionId}`)
     }
+    if (existingTask.status === "running") {
+      throw new Error(`Task is already running for session: ${input.sessionId}`)
+    }
 
     existingTask.status = "running"
     existingTask.completedAt = undefined
@@ -262,7 +266,9 @@ export class BackgroundManager {
       path: { id: existingTask.sessionID },
       body: {
         agent: existingTask.agent,
+        system: existingTask.skillContent,
         parts: [{ type: "text", text: input.prompt }],
+        ...(existingTask.model ? { model: existingTask.model } : {}),
       },
     }).catch((error) => {
       log("[background-agent] resume promptAsync error:", error)

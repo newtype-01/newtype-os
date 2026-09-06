@@ -32,6 +32,7 @@ import { knowledge_base } from "./knowledge-base"
 import { workbench } from "./workbench"
 
 export { sessionExists } from "./session-manager/storage"
+export { createSessionTools } from "./session-manager"
 
 export { interactive_bash, startBackgroundCheck as startTmuxCheck } from "./interactive-bash"
 export { createSkillTool, createSkillCatalogTool } from "./skill"

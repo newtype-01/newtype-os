@@ -13,13 +13,14 @@ import { subagentSessions } from "../../features/claude-code-session-state"
 import { analyzeQualityForRetry, formatFinalOutput, MAX_REWRITE_ATTEMPTS } from "./quality-feedback"
 import { log } from "../../shared/logger"
 import { createTaskGuard } from "./task-guard"
+import { createSessionWaitGraph } from "./wait-graph"
 
 type OpencodeClient = PluginInput["client"]
 
 const DEPUTY_AGENT = "deputy"
 const CATEGORY_EXAMPLES = Object.keys(DEFAULT_CATEGORIES).map(k => `'${k}'`).join(", ")
-const POLL_INTERVAL_MS = 500
-const MAX_POLL_TIME_MS = 10 * 60 * 1000
+const DEFAULT_POLL_INTERVAL_MS = 500
+const DEFAULT_MAX_WAIT_MS = 10 * 60 * 1000
 const LOG_PREFIX = "[chief-task]"
 
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
@@ -63,27 +64,87 @@ type ToolContextWithMetadata = {
   metadata?: (input: { title?: string; metadata?: Record<string, unknown> }) => void
 }
 
-async function waitForSessionIdle(client: OpencodeClient, sessionID: string): Promise<void> {
-  const pollStart = Date.now()
-  while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
-    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
-    const statusResult = await client.session.status()
-    const allStatuses = (statusResult.data ?? {}) as Record<string, { type: string }>
-    const sessionStatus = allStatuses[sessionID]
-    if (!sessionStatus || sessionStatus.type === "idle") {
-      break
+type WaitResult =
+  | { status: "idle" }
+  | { status: "timeout" }
+  | { status: "aborted" }
+  | { status: "error"; error: string }
+
+async function waitForSessionIdle(
+  client: OpencodeClient,
+  sessionID: string,
+  messageID: string,
+  abort: AbortSignal,
+  maxWaitMs: number,
+  pollIntervalMs: number,
+): Promise<WaitResult> {
+  const stop = () => client.session.abort({ path: { id: sessionID } }).catch(() => {})
+  const onAbort = () => {
+    void stop()
+  }
+  if (abort.aborted) {
+    onAbort()
+    return { status: "aborted" }
+  }
+  abort.addEventListener("abort", onAbort, { once: true })
+
+  try {
+    const started = Date.now()
+    while (Date.now() - started < maxWaitMs) {
+      if (abort.aborted) return { status: "aborted" }
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
+      if (abort.aborted) return { status: "aborted" }
+
+      try {
+        const statusResult = await client.session.status()
+        if (statusResult.error) {
+          await stop()
+          return { status: "error", error: String(statusResult.error) }
+        }
+
+        const allStatuses = (statusResult.data ?? {}) as Record<string, { type: string }>
+        const sessionStatus = allStatuses[sessionID]
+        if (!sessionStatus || sessionStatus.type === "idle") {
+          const messagesResult = await client.session.messages({ path: { id: sessionID } })
+          if (messagesResult.error) {
+            await stop()
+            return { status: "error", error: String(messagesResult.error) }
+          }
+          const messages = ((messagesResult as { data?: unknown }).data ?? messagesResult) as SessionMessage[]
+          if (messages.some((message) => message.info?.role === "assistant" && message.info.parentID === messageID)) {
+            return { status: "idle" }
+          }
+        }
+      } catch (error) {
+        await stop()
+        return { status: "error", error: error instanceof Error ? error.message : String(error) }
+      }
     }
+    await stop()
+    return { status: "timeout" }
+  } finally {
+    abort.removeEventListener("abort", onAbort)
   }
 }
 
 type SessionMessage = {
-  info?: { role?: string; time?: { created?: number } }
+  info?: {
+    role?: string
+    parentID?: string
+    agent?: string
+    model?: { providerID?: string; modelID?: string }
+    system?: string
+    tools?: Record<string, boolean>
+    error?: { name?: string; data?: { message?: string } }
+    time?: { created?: number; completed?: number }
+  }
   parts?: Array<{ type?: string; text?: string }>
 }
 
-async function getLatestAssistantMessage(
+async function getAssistantMessage(
   client: OpencodeClient,
-  sessionID: string
+  sessionID: string,
+  parentID: string,
 ): Promise<{ text: string; error?: string }> {
   const messagesResult = await client.session.messages({ path: { id: sessionID } })
 
@@ -92,18 +153,101 @@ async function getLatestAssistantMessage(
   }
 
   const messages = ((messagesResult as { data?: unknown }).data ?? messagesResult) as SessionMessage[]
-  const assistantMessages = messages
-    .filter((m) => m.info?.role === "assistant")
+  const assistantMessage = messages
+    .filter((message) => message.info?.role === "assistant" && message.info.parentID === parentID)
     .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
-  const lastMessage = assistantMessages[0]
+    .at(0)
 
-  if (!lastMessage) {
-    return { text: "", error: "No assistant response found" }
+  if (!assistantMessage) return { text: "", error: "No assistant response found for this task request" }
+  if (assistantMessage.info?.error) {
+    return {
+      text: "",
+      error: assistantMessage.info.error.data?.message ?? assistantMessage.info.error.name ?? "Assistant response failed",
+    }
   }
 
-  const textParts = lastMessage?.parts?.filter((p) => p.type === "text") ?? []
+  const textParts = assistantMessage.parts?.filter((part) => part.type === "text") ?? []
   const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
+  if (!textContent.trim()) return { text: "", error: "Task completed without text output" }
   return { text: textContent }
+}
+
+async function getResumeIdentity(client: OpencodeClient, sessionID: string) {
+  let messagesResult
+  try {
+    messagesResult = await client.session.messages({ path: { id: sessionID } })
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) }
+  }
+  if (messagesResult.error) return { error: String(messagesResult.error) }
+
+  const messages = ((messagesResult as { data?: unknown }).data ?? messagesResult) as SessionMessage[]
+  const firstUser = messages
+    .filter((message) => message.info?.role === "user")
+    .sort((a, b) => (a.info?.time?.created ?? 0) - (b.info?.time?.created ?? 0))
+    .at(0)
+  if (!firstUser?.info?.agent || !firstUser.info.model?.providerID || !firstUser.info.model.modelID) {
+    return { error: "Original agent and model could not be determined" }
+  }
+
+  return {
+    agent: firstUser.info.agent,
+    model: {
+      providerID: firstUser.info.model.providerID,
+      modelID: firstUser.info.model.modelID,
+    },
+    system: firstUser.info.system,
+    tools: firstUser.info.tools,
+  }
+}
+
+async function validateResumeTarget(client: OpencodeClient, caller: string, target: string) {
+  if (caller === target) {
+    return `❌ Task resume blocked: session ${caller} cannot resume itself.`
+  }
+
+  const chain = [caller]
+  let current: string | undefined = caller
+  for (let depth = 0; current && depth < 64; depth++) {
+    try {
+      const sessionResult: { data?: { parentID?: string }; error?: unknown } = await client.session.get({ path: { id: current } })
+      if (sessionResult.error) {
+        return `❌ Task resume blocked: could not verify the target session lineage: ${String(sessionResult.error)}`
+      }
+      current = sessionResult.data?.parentID
+    } catch (error) {
+      return `❌ Task resume blocked: could not verify the target session lineage: ${error instanceof Error ? error.message : String(error)}`
+    }
+    if (!current) return
+    chain.push(current)
+    if (current === target) {
+      return [
+        "❌ Task resume blocked: a child session cannot resume an ancestor session.",
+        "",
+        `Session chain: ${chain.join(" -> ")}`,
+        "Return the current result to the caller instead.",
+      ].join("\n")
+    }
+  }
+
+  if (current) return "❌ Task resume blocked: session lineage exceeded the supported depth."
+}
+
+async function validateResumeTargetIdle(client: OpencodeClient, target: string) {
+  try {
+    const statusResult = await client.session.status()
+    if (statusResult.error) return `❌ Task resume blocked: could not read session status: ${String(statusResult.error)}`
+    const statuses = (statusResult.data ?? {}) as Record<string, { type: string }>
+    if (statuses[target] && statuses[target].type !== "idle") {
+      return `❌ Task resume blocked: session ${target} is already running (${statuses[target].type}). Check its existing execution before resuming it again.`
+    }
+  } catch (error) {
+    return `❌ Task resume blocked: could not read session status: ${error instanceof Error ? error.message : String(error)}`
+  }
+}
+
+function requestMessageID() {
+  return `msg_${crypto.randomUUID()}`
 }
 
 function resolveCategoryConfig(
@@ -144,6 +288,8 @@ export interface ChiefTaskToolOptions {
   userCategories?: CategoriesConfig
   agentModels?: Record<string, AgentModelConfig>
   taskCircuitBreaker?: TaskCircuitBreakerConfig
+  maxWaitMs?: number
+  pollIntervalMs?: number
 }
 
 export interface BuildSystemContentInput {
@@ -168,6 +314,9 @@ export function buildSystemContent(input: BuildSystemContentInput): string | und
 export function createChiefTask(options: ChiefTaskToolOptions): ToolDefinition {
   const { manager, client, userCategories, agentModels } = options
   const guard = createTaskGuard(options.taskCircuitBreaker)
+  const waits = createSessionWaitGraph()
+  const maxWaitMs = options.maxWaitMs ?? DEFAULT_MAX_WAIT_MS
+  const pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS
 
   return tool({
     description: CHIEF_TASK_DESCRIPTION,
@@ -208,6 +357,11 @@ export function createChiefTask(options: ChiefTaskToolOptions): ToolDefinition {
         : undefined
 
       if (args.resume) {
+        const targetError = await validateResumeTarget(client, ctx.sessionID, args.resume)
+        if (targetError) return targetError
+        const targetStatusError = await validateResumeTargetIdle(client, args.resume)
+        if (targetStatusError) return targetStatusError
+
         if (runInBackground) {
           try {
             const task = await manager.resume({
@@ -241,79 +395,83 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
         }
 
         const toastManager = getTaskToastManager()
-        const taskId = `resume_sync_${args.resume.slice(0, 8)}`
+        const taskId = `resume_sync_${args.resume.slice(0, 8)}_${crypto.randomUUID().slice(0, 8)}`
         const startTime = new Date()
-
-        if (toastManager) {
-          toastManager.addTask({
-            id: taskId,
-            description: args.description,
-            agent: "resume",
-            isBackground: false,
-          })
-        }
-
-        ctx.metadata?.({
-          title: `Resume: ${args.description}`,
-          metadata: { sessionId: args.resume, sync: true },
-        })
-
+        const wait = waits.reserve(ctx.sessionID, args.resume)
+        if (!wait.allowed) return wait.message
         try {
-          await client.session.prompt({
-            path: { id: args.resume },
-            body: {
-              parts: [{ type: "text", text: args.prompt }],
-            },
+          const identity = await getResumeIdentity(client, args.resume)
+          if (identity.error || !identity.agent || !identity.model) {
+            return `❌ Failed to resume task: ${identity.error ?? "Original execution identity is incomplete"}\n\nSession ID: ${args.resume}`
+          }
+
+          if (toastManager) {
+            toastManager.addTask({
+              id: taskId,
+              description: args.description,
+              agent: identity.agent,
+              isBackground: false,
+            })
+          }
+
+          ctx.metadata?.({
+            title: `Resume: ${args.description}`,
+            metadata: { sessionId: args.resume, sync: true },
           })
-        } catch (promptError) {
-          if (toastManager) {
-            toastManager.removeTask(taskId)
+
+          const messageID = requestMessageID()
+          try {
+            const promptResult = await client.session.promptAsync({
+              path: { id: args.resume },
+              body: {
+                messageID,
+                agent: identity.agent,
+                model: identity.model,
+                system: identity.system,
+                tools: identity.tools,
+                parts: [{ type: "text", text: args.prompt }],
+              },
+            })
+            if (promptResult.error) throw new Error(String(promptResult.error))
+          } catch (promptError) {
+            if (toastManager) toastManager.removeTask(taskId)
+            const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
+            return `❌ Failed to send resume prompt: ${errorMessage}\n\nSession ID: ${args.resume}`
           }
-          const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
-          return `❌ Failed to send resume prompt: ${errorMessage}\n\nSession ID: ${args.resume}`
-        }
 
-        const messagesResult = await client.session.messages({
-          path: { id: args.resume },
-        })
-
-        if (messagesResult.error) {
-          if (toastManager) {
-            toastManager.removeTask(taskId)
+          const waitResult = await waitForSessionIdle(
+            client,
+            args.resume,
+            messageID,
+            ctx.abort,
+            maxWaitMs,
+            pollIntervalMs,
+          )
+          if (toastManager) toastManager.removeTask(taskId)
+          if (waitResult.status === "timeout") {
+            return `⏳ Task exceeded the ${formatDuration(startTime)} time limit and was stopped.\n\nSession ID: ${args.resume}\n\nNo completion result was recorded.`
           }
-          return `❌ Error fetching result: ${messagesResult.error}\n\nSession ID: ${args.resume}`
-        }
+          if (waitResult.status === "aborted") return `Task cancelled.\n\nSession ID: ${args.resume}`
+          if (waitResult.status === "error") {
+            return `❌ Error waiting for result: ${waitResult.error}\n\nSession ID: ${args.resume}`
+          }
 
-        const messages = ((messagesResult as { data?: unknown }).data ?? messagesResult) as Array<{
-          info?: { role?: string; time?: { created?: number } }
-          parts?: Array<{ type?: string; text?: string }>
-        }>
+          const messageResult = await getAssistantMessage(client, args.resume, messageID)
+          if (messageResult.error) {
+            return `❌ Task failed: ${messageResult.error}\n\nSession ID: ${args.resume}`
+          }
 
-        const assistantMessages = messages
-          .filter((m) => m.info?.role === "assistant")
-          .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
-        const lastMessage = assistantMessages[0]
-
-        if (toastManager) {
-          toastManager.removeTask(taskId)
-        }
-
-        if (!lastMessage) {
-          return `❌ No assistant response found.\n\nSession ID: ${args.resume}`
-        }
-
-        const textParts = lastMessage?.parts?.filter((p) => p.type === "text") ?? []
-        const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
-
-        const duration = formatDuration(startTime)
-
-        return `Task resumed and completed in ${duration}.
+          return `Task resumed and completed in ${formatDuration(startTime)}.
 
 Session ID: ${args.resume}
+Agent: ${identity.agent}
 
 ---
 
-${textContent || "(No text output)"}`
+${messageResult.text}`
+        } finally {
+          wait.release()
+        }
       }
 
       if (args.category && args.subagent_type) {
@@ -462,9 +620,11 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
         })
 
         let promptError: Error | undefined
-        await client.session.promptAsync({
+        let messageID = requestMessageID()
+        const promptResult = await client.session.promptAsync({
           path: { id: sessionID },
           body: {
+            messageID,
             agent: agentToUse,
             system: systemContent,
             parts: [{ type: "text", text: args.prompt }],
@@ -472,7 +632,9 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
           },
         }).catch((error) => {
           promptError = error instanceof Error ? error : new Error(String(error))
+          return undefined
         })
+        if (promptResult?.error) promptError = new Error(String(promptResult.error))
 
         if (promptError) {
           if (toastManager && taskId !== undefined) {
@@ -485,9 +647,28 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
           return `❌ Failed to send prompt: ${errorMessage}\n\nSession ID: ${sessionID}`
         }
 
-        await waitForSessionIdle(client, sessionID)
+        const waitResult = await waitForSessionIdle(
+          client,
+          sessionID,
+          messageID,
+          ctx.abort,
+          maxWaitMs,
+          pollIntervalMs,
+        )
+        if (waitResult.status === "timeout") {
+          if (toastManager) toastManager.removeTask(taskId)
+          return `⏳ Task exceeded the ${formatDuration(startTime)} time limit and was stopped.\n\nAgent: ${agentToUse}\nSession ID: ${sessionID}\n\nNo completion result was recorded.`
+        }
+        if (waitResult.status === "aborted") {
+          if (toastManager) toastManager.removeTask(taskId)
+          return `Task cancelled.\n\nSession ID: ${sessionID}`
+        }
+        if (waitResult.status === "error") {
+          if (toastManager) toastManager.removeTask(taskId)
+          return `❌ Error waiting for result: ${waitResult.error}\n\nSession ID: ${sessionID}`
+        }
 
-        let messageResult = await getLatestAssistantMessage(client, sessionID)
+        let messageResult = await getAssistantMessage(client, sessionID, messageID)
         if (messageResult.error) {
           if (toastManager && taskId !== undefined) {
             toastManager.removeTask(taskId)
@@ -514,9 +695,11 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
           })
 
           let retryError: Error | undefined
-          await client.session.promptAsync({
+          messageID = requestMessageID()
+          const retryResult = await client.session.promptAsync({
             path: { id: sessionID },
             body: {
+              messageID,
               agent: agentToUse,
               system: systemContent,
               parts: [{ type: "text", text: qualityResult.improvementPrompt! }],
@@ -524,16 +707,39 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
             },
           }).catch((error) => {
             retryError = error instanceof Error ? error : new Error(String(error))
+            return undefined
           })
+          if (retryResult?.error) retryError = new Error(String(retryResult.error))
 
           if (retryError) {
             log(`${LOG_PREFIX} Retry prompt failed`, { sessionID, error: retryError.message })
             break
           }
 
-          await waitForSessionIdle(client, sessionID)
+          const retryWait = await waitForSessionIdle(
+            client,
+            sessionID,
+            messageID,
+            ctx.abort,
+            maxWaitMs,
+            pollIntervalMs,
+          )
+          if (retryWait.status !== "idle") {
+            const reason = retryWait.status === "error" ? retryWait.error : retryWait.status
+            log(`${LOG_PREFIX} Retry wait did not complete`, { sessionID, reason })
+            if (retryWait.status === "timeout") {
+              if (toastManager) toastManager.removeTask(taskId)
+              return `⏳ Task retry exceeded the ${formatDuration(startTime)} time limit and was stopped.\n\nAgent: ${agentToUse}\nSession ID: ${sessionID}\n\nNo completion result was recorded.`
+            }
+            if (retryWait.status === "aborted") {
+              if (toastManager) toastManager.removeTask(taskId)
+              return `Task cancelled.\n\nSession ID: ${sessionID}`
+            }
+            if (toastManager) toastManager.removeTask(taskId)
+            return `❌ Error waiting for task retry: ${retryWait.error}\n\nSession ID: ${sessionID}`
+          }
 
-          messageResult = await getLatestAssistantMessage(client, sessionID)
+          messageResult = await getAssistantMessage(client, sessionID, messageID)
           if (messageResult.error) {
             log(`${LOG_PREFIX} Retry fetch failed`, { sessionID, error: messageResult.error })
             break
@@ -565,7 +771,7 @@ Session ID: ${sessionID}
 
 ---
 
-${finalOutput || "(No text output)"}`
+${finalOutput}`
       } catch (error) {
         reservation.release()
         if (toastManager && taskId !== undefined) {
@@ -576,6 +782,8 @@ ${finalOutput || "(No text output)"}`
         }
         const message = error instanceof Error ? error.message : String(error)
         return `❌ Task failed: ${message}`
+      } finally {
+        if (syncSessionID) subagentSessions.delete(syncSessionID)
       }
     },
   })
