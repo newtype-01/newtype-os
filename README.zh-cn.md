@@ -62,15 +62,15 @@ newtype OS 是一套**专为内容生产打造的 8 Agent 多层编排系统**�
 
 原生 Mac 内容创作工作台，提供接近 Ulysses 的三栏写作界面、Markdown 编辑与预览，以及独立悬浮的 newtype OS 终端。
 
-[**下载 newtype Workstation 0.3.18 Apple Silicon 版**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+[**下载 newtype Workstation 0.3.19 Apple Silicon 版**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
 
 系统要求：Apple Silicon（M1 或更新芯片），macOS 11.5 或更高版本。
 
-0.3.18（Build 26）内置 newtype CLI 0.0.87。项目文件树的选中背景现在会完整覆盖文件夹的展开/收起箭头。
+0.3.19（Build 27）内置 newtype CLI 0.0.88。项目文件树的选中背景现在会在两侧保留舒适间距，同时继续完整覆盖文件夹的展开/收起箭头。
 
 > 这是经过临时签名、尚未通过 Apple 公证的版本。首次尝试启动后，可能需要进入“系统设置 → 隐私与安全性”，点击“仍要打开”。请只从本 GitHub 仓库下载，并核对 Release 中发布的 SHA-256。
 
-SHA-256：`62d71b1bef6532d44b884f5bca30b9137a096ccfdb5012854b7b461ffba3c4dd`
+SHA-256：`dbaa9d94579639d870204c5ca1c45bf24116026109a239fff6b170bf993d8d56`
 
 打开 DMG，将 `newtype Workstation` 拖入“应用程序”文件夹即可。本版本暂不启用自动更新。
 
