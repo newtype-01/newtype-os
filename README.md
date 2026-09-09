@@ -62,15 +62,15 @@ The products share the same newtype agent-team lineage, but they are no longer p
 
 A native Mac content workspace with a Ulysses-inspired three-column writing interface, Markdown editing and preview, and a separate floating newtype OS terminal.
 
-[**Download newtype Workstation 0.3.19 for Apple Silicon**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
+[**Download newtype Workstation 0.3.20 for Apple Silicon**](https://github.com/newtype-01/newtype-os/releases/download/workstation-latest/newtype-workstation-mac-arm64.dmg)
 
 Requirements: Apple Silicon (M1 or later) and macOS 11.5 or later.
 
-Version 0.3.19 (Build 27) bundles newtype CLI 0.0.88. The project file tree selection highlight now leaves comfortable space at both pane edges while still containing folder disclosure arrows.
+Version 0.3.20 (Build 28) bundles newtype CLI 0.0.89. Session requests now use bounded, message-correlated waits; interrupted content runs stop safely after restart instead of replaying stale TODO or memory-summary work.
 
 > This build is ad-hoc signed and has not been notarized by Apple. macOS may require you to choose **Open Anyway** in **System Settings → Privacy & Security** after the first launch attempt. Download it only from this GitHub repository and verify the published SHA-256.
 
-SHA-256: `dbaa9d94579639d870204c5ca1c45bf24116026109a239fff6b170bf993d8d56`
+SHA-256: `d042f6e2e8c93b470af8c6c3063d90f21b68bf6049d636ac97f676adb8b3374c`
 
 Open the DMG and drag `newtype Workstation` into Applications. Automatic updates are not enabled for this build.
 
